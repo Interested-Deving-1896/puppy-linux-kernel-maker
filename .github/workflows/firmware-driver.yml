@@ -1,9 +1,9 @@
-name: Download Linux Firmware SquashFS (Deduplicated)
+name: Download Linux Firmware SquashFS (Deduplicated + PC-Only)
 
 on:
   schedule:
     - cron: '0 2 1 */2 *'
-  workflow_dispatch:   # Only manual trigger
+  workflow_dispatch:
 
 jobs:
   firmware:
@@ -25,54 +25,104 @@ jobs:
         run: |
           git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git linux-firmware-current
 
-      - name: Deduplicate firmware files with symlinks (Python)
+      - name: Remove non-PC and non-x86 firmware (Python)
         shell: bash
         run: |
           python3 - <<'EOF'
-          import hashlib
           import os
+          import shutil
 
-          def sha256sum(filename):
-              h = hashlib.sha256()
-              with open(filename, 'rb') as f:
-                  while True:
-                      chunk = f.read(8192)
-                      if not chunk:
+          base = "linux-firmware-current"
+
+          # DIRECTORIES TO REMOVE (non-PC or non-x86)
+          REMOVE_DIRS = [
+              # ARM / phone / embedded
+              "qcom", "mediatek", "mrvl", "marvell", "rockchip",
+              "ti-connectivity", "brcmfmac", "broadcom", "cxgb4",
+              "ath10k", "ath11k", "wil6210", "wcn36xx",
+              # Automotive / industrial / IoT
+              "adsp", "aspeed", "nvidia/tegra", "serial",
+              # Server NICs not used for consumer PCs
+              "liquidio", "cxgb3", "cxgb4", "qed",
+              # Non-x86 architectures
+              "mips", "powerpc", "riscv", "arm", "arm64",
+              "ppc", "xtensa",
+              # ChromeOS specific
+              "google",
+          ]
+
+          # FILE PATTERN FILTERS — DELETE if filename contains these words
+          REMOVE_PATTERNS = [
+              "arm", "aarch64", "tegra", "tablet", "router",
+              "fpga", "ml", "neural", "vr", "meta",
+              "automotive", "industrial",
+          ]
+
+          # Remove directories
+          for root, dirs, files in os.walk(base, topdown=True):
+              for d in dirs:
+                  full = os.path.join(root, d)
+                  for bad in REMOVE_DIRS:
+                      if bad in full.replace("\\", "/"):
+                          shutil.rmtree(full, ignore_errors=True)
                           break
-                      h.update(chunk)
+
+          # Remove files by keyword
+          for root, dirs, files in os.walk(base):
+              for f in files:
+                  lower = f.lower()
+                  if any(p in lower for p in REMOVE_PATTERNS):
+                      try:
+                          os.remove(os.path.join(root, f))
+                      except:
+                          pass
+
+          EOF
+
+      - name: Deduplicate firmware files (Python)
+        run: |
+          python3 - <<'EOF'
+          import hashlib, os
+
+          def sha256sum(path):
+              h = hashlib.sha256()
+              with open(path, "rb") as f:
+                  while True:
+                      b = f.read(8192)
+                      if not b: break
+                      h.update(b)
               return h.hexdigest()
 
-          base_dir = 'linux-firmware-current'
+          base = "linux-firmware-current"
           hashes = {}
-          for root, dirs, files in os.walk(base_dir):
-              for name in files:
-                  path = os.path.join(root, name)
-                  file_hash = sha256sum(path)
-                  if file_hash in hashes:
-                      original = hashes[file_hash]
-                      rel_target = os.path.relpath(original, os.path.dirname(path))
-                      os.remove(path)
-                      os.symlink(rel_target, path)
+
+          for root, dirs, files in os.walk(base):
+              for f in files:
+                  p = os.path.join(root, f)
+                  h = sha256sum(p)
+                  if h in hashes:
+                      original = hashes[h]
+                      rel = os.path.relpath(original, os.path.dirname(p))
+                      os.remove(p)
+                      os.symlink(rel, p)
                   else:
-                      hashes[file_hash] = path
+                      hashes[h] = p
           EOF
 
       - name: Prepare SquashFS root
         run: |
           mkdir -p squashfs-root/usr/lib
-          rm -rf linux-firmware-current/.git
-          rm -f linux-firmware-current/.gitignore
-          rm -f linux-firmware-current/.codespell
-          rm -f linux-firmware-current/.editorconfig
-          rm -rf linux-firmware-current/.pre-commit*
+          rm -rf linux-firmware-current/.git*
+          rm -f linux-firmware-current/.*
           cp -a linux-firmware-current squashfs-root/usr/lib/firmware
 
-      - name: Create SquashFS image with max XZ compression
+      - name: Create SquashFS image (XZ max compression)
         run: |
-          mksquashfs squashfs-root linux-firmware-current.sfs -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+          mksquashfs squashfs-root linux-firmware-pconly.sfs \
+            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
 
-      - name: Upload firmware tarball
+      - name: Upload firmware image
         uses: actions/upload-artifact@v4
         with:
-          name: linux-firmware-current
-          path: linux-firmware-current.sfs
+          name: linux-firmware-pconly
+          path: linux-firmware-pconly.sfs
