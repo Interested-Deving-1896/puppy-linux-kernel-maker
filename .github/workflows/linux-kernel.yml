@@ -112,11 +112,13 @@ jobs:
       - name: Package kernel + squashfs
         run: |
           tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz \
-            linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs \
-            huge-kernel-${KMOD_VERSION}-usrmerge.sfs
+            linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs
+          tar -cJf huge-kernel-${KMOD_VERSION}-usrmerge.tar.xz \
+            linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}-usrmerge.sfs
 
       - name: Upload final tarball
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}
-          path: huge-kernel-${{ env.KMOD_VERSION }}.tar.xz
+          path: |
+                 *.tar.xz
