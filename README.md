@@ -1,5 +1,4 @@
-This is a simple online kernel compiler for Puppy Linux using github repo
-
+This is a just a simple custom kernel for Puppy Linux
 How to use this:
 * Fork this repo
 * Edit .config files
