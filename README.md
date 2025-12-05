@@ -13,7 +13,9 @@ How to use this:
 
 There are three workflow files:
 * firmware-driver.yml - for creating linux firmware driver
-* linux-kernel - for creating linux kernel without any patches
-* linux-kernel-aufs - for creating linux kernel with AUFS patch
+* linux-kernel.yml - for creating linux kernel without any patches
+* linux-kernel-aufs.yml - for creating linux kernel with AUFS patch
 
 Tips: If there is a new linux kernel version. Or want to compile other kernel version. Just create new branch and edit the environment section of workflow files. Then run workflow on the newly created branch
+
+NOTE: This tool follows github workflow rules. For free version, there are 33 hours of runtime hours per month
