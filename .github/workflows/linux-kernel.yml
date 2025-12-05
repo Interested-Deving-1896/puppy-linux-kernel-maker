@@ -1,4 +1,4 @@
-name: Puppy Linux Kernel Build + Modules
+name: Puppy Linux Kernel Build
 
 on:
   schedule:
