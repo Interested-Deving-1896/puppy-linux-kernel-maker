@@ -1,8 +1,6 @@
 name: Linux Firmware Drivers SquashFS (Deduplicated + PC-Only)
 
 on:
-  schedule:
-    - cron: '0 2 1 */2 *'
   workflow_dispatch:
 
 jobs:
