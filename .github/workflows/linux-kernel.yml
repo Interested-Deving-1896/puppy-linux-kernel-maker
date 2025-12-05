@@ -48,11 +48,11 @@ jobs:
 
           if [ -z "$LATEST" ]; then
             echo "No release found for ${BASE_VERSION}. Exiting."
-            exit 1
+          else
+            echo "Detected latest kernel patch: $LATEST"
+            echo "KERNEL_VERSION=$LATEST" >> $GITHUB_ENV           
           fi
 
-          echo "Detected latest kernel patch: $LATEST"
-          echo "KERNEL_VERSION=$LATEST" >> $GITHUB_ENV
 
       - name: Download Linux kernel
         run: |
