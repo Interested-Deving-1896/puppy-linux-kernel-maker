@@ -1,0 +1,59 @@
+name: Download Linux Firmware SquashFS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+
+    container:
+      image: debian:sid
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y wget git squashfs-tools xz-utils ca-certificates fdupes
+
+      - name: Download latest Linux firmware
+        run: |
+          git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git linux-firmware-current
+
+      - name: Deduplicate firmware files with symlinks
+        run: |
+          cd linux-firmware-current
+          # find duplicate files by hash and replace later ones with symlinks
+          fdupes -r -S . | while read line; do
+              files=($line)
+              original="${files[0]}"
+              for dup in "${files[@]:1}"; do
+                  rm "$dup"
+                  ln -s "$(realpath --relative-to=$(dirname "$dup") "$original")" "$dup"
+              done
+          done
+          cd ..
+
+      - name: Prepare SquashFS root
+        run: |
+          mkdir -p squashfs-root/usr/lib
+          cp -a linux-firmware-current squashfs-root/usr/lib/firmware
+
+      - name: Create SquashFS image with max XZ compression
+        run: |
+          mksquashfs squashfs-root linux-firmware-current.squashfs -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+
+      - name: Package SquashFS into XZ-compressed tarball
+        run: |
+          tar -cJf linux-firmware-current.tar.xz linux-firmware-current.squashfs
+
+      - name: Upload firmware tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-firmware-current
+          path: linux-firmware-current.tar.xz
