@@ -28,15 +28,22 @@ jobs:
             squashfs-tools wget xz-utils ca-certificates gcc g++ binutils \
             llvm clang kmod python3 curl git
 
-      - name: "Detect latest patch for ${BASE_VERSION}"
+      - name: Detect latest patch for base version
         id: detect_kernel
         run: |
           LATEST=$(curl -s https://www.kernel.org/releases.json \
-            | python3 -c "import sys,json; data=json.load(sys.stdin); \
-for r in data['releases']: \
-    if r['version'].startswith('${BASE_VERSION}.'): print(r['version'])" \
-            | sort -V | tail -1)
-
+            | python3 - << 'EOF'
+import sys, json, os
+base = os.environ["BASE_VERSION"] + "."
+data = json.load(sys.stdin)
+versions = sorted(
+    [r["version"] for r in data["releases"] if r["version"].startswith(base)],
+    key=lambda x: [int(p) for p in x.split(".")]
+)
+print(versions[-1] if versions else "")
+EOF
+          )
+          
           if [ -z "$LATEST" ]; then
             echo "No release found for ${BASE_VERSION}"
             exit 1
