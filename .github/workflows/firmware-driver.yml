@@ -1,4 +1,4 @@
-name: Download Linux Firmware SquashFS (Deduplicated + PC-Only)
+name: Linux Firmware Drivers SquashFS (Deduplicated + PC-Only)
 
 on:
   schedule:
