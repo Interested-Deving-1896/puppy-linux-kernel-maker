@@ -2,8 +2,6 @@ name: Linux Kernel Build + vmlinuz + Modules Tarball
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
