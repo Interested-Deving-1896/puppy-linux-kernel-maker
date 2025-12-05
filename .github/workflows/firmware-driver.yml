@@ -1,7 +1,7 @@
-name: Download Linux Firmware SquashFS
+name: Download Linux Firmware SquashFS (Deduplicated)
 
 on:
-  workflow_dispatch:
+  workflow_dispatch   # Only manual trigger
 
 jobs:
   firmware:
@@ -17,26 +17,43 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y wget git squashfs-tools xz-utils ca-certificates fdupes
+          apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3
 
       - name: Download latest Linux firmware
         run: |
           git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git linux-firmware-current
 
-      - name: Deduplicate firmware files with symlinks
+      - name: Deduplicate firmware files with symlinks (Python)
         shell: bash
         run: |
-          cd linux-firmware-current
-          # find duplicate files by hash and replace later ones with symlinks
-          fdupes -r -S . | while read line; do
-              files=($line)
-              original="${files[0]}"
-              for dup in "${files[@]:1}"; do
-                  rm "$dup"
-                  ln -s "$(realpath --relative-to=$(dirname "$dup") "$original")" "$dup"
-              done
-          done
-          cd ..
+          python3 - <<'EOF'
+          import hashlib
+          import os
+
+          def sha256sum(filename):
+              h = hashlib.sha256()
+              with open(filename, 'rb') as f:
+                  while True:
+                      chunk = f.read(8192)
+                      if not chunk:
+                          break
+                      h.update(chunk)
+              return h.hexdigest()
+
+          base_dir = 'linux-firmware-current'
+          hashes = {}
+          for root, dirs, files in os.walk(base_dir):
+              for name in files:
+                  path = os.path.join(root, name)
+                  file_hash = sha256sum(path)
+                  if file_hash in hashes:
+                      original = hashes[file_hash]
+                      rel_target = os.path.relpath(original, os.path.dirname(path))
+                      os.remove(path)
+                      os.symlink(rel_target, path)
+                  else:
+                      hashes[file_hash] = path
+          EOF
 
       - name: Prepare SquashFS root
         run: |
