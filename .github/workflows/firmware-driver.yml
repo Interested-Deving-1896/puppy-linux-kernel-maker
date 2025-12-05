@@ -2,8 +2,6 @@ name: Download Linux Firmware SquashFS
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   firmware:
