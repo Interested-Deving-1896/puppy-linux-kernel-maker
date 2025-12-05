@@ -2,7 +2,7 @@ name: Puppy Linux Kernel Build
 
 on:
   schedule:
-    - cron: '0 2 * * *' # daily at 02:00 UTC
+    - cron: '0 2 */20 * *' # daily at 02:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -120,10 +120,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}
-          path: huge-kernel-${{ env.KMOD_VERSION }}.sfs         
+          path: huge-kernel-${{ env.KMOD_VERSION }}.tar.xz         
 
       - name: Upload kernel (usrmerge)
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge
-          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.sfs         
+          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.tar.xz         
