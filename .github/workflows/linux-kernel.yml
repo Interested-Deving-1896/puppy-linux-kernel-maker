@@ -96,20 +96,24 @@ jobs:
 
       - name: Prepare SquashFS root
         run: |
-          mkdir -p squashfs-root/usr/lib/modules
-          cp -arf staging/lib/modules/* squashfs-root/usr/lib/modules/
-          mkdir -p squashfs-root/boot
-          cp linux/arch/x86/boot/bzImage squashfs-root/boot/vmlinuz
+          mkdir -p squashfs-root/lib/modules
+          mkdir -p squashfs-root-usrmerge/usr/lib/modules
+          cp -arf staging/lib/modules/* squashfs-root/lib/modules/
+          cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
+          cp linux/arch/x86/boot/bzImage linux/arch/x86/boot/vmlinuz
 
       - name: Create SquashFS image
         run: |
           mksquashfs squashfs-root huge-kernel-${KMOD_VERSION}.sfs \
             -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+          mksquashfs squashfs-root-usrmerge huge-kernel-${KMOD_VERSION}-usrmerge.sfs \
+            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86            
 
       - name: Package kernel + squashfs
         run: |
           tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz \
-            linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs
+            linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs \
+            huge-kernel-${KMOD_VERSION}-usrmerge.sfs
 
       - name: Upload final tarball
         uses: actions/upload-artifact@v4
