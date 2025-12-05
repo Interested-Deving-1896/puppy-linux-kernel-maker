@@ -1,8 +1,8 @@
 name: Puppy Linux Kernel Build
 
 on:
-  schedule:
-    - cron: '0 2 */20 * *' # daily at 02:00 UTC
+  #schedule:
+    #- cron: '0 2 */20 * *' # daily at 02:00 UTC
   workflow_dispatch:
 
 jobs:
