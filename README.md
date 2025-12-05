@@ -18,4 +18,4 @@ There are three workflow files:
 
 Tips: If there is a new linux kernel version. Or want to compile other kernel version. Just create new branch and edit the environment section of workflow files. Then run workflow on the newly created branch
 
-NOTE: This tool follows github workflow rules. For free version, there are 33 hours of runtime hours per month
+NOTE: This tool follows github workflow rules. For github free version, there are 33 hours of runtime hours per month
