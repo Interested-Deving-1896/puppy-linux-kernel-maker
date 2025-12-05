@@ -13,8 +13,8 @@ jobs:
       image: debian:sid
 
     env:
-      KERNEL_VERSION: 6.18.0    # <-- Kernel version to download
-      CUSTOM_VERSION: foo       # <-- Custom kernel suffix
+      KERNEL_VERSION: 6.18    # <-- Kernel version to download
+      CUSTOM_VERSION: rzm       # <-- Custom kernel suffix
 
     steps:
       - name: Checkout repository
