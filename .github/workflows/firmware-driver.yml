@@ -1,7 +1,9 @@
 name: Download Linux Firmware SquashFS (Deduplicated)
 
 on:
-  workflow_dispatch   # Only manual trigger
+  schedule:
+    - cron: '0 2 1 */2 *'
+  workflow_dispatch:   # Only manual trigger
 
 jobs:
   firmware:
