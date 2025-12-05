@@ -75,7 +75,7 @@ jobs:
           done
 
       - name: Copy provided .config
-        run: cp .config linux/.config
+        run: cp .config-aufs linux/.config
 
       - name: Auto-update config
         working-directory: linux
