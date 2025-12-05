@@ -2,9 +2,8 @@ name: Linux Kernel Build + Modules + SquashFS
 
 on:
   schedule:
-    # Runs daily at 02:00 UTC
-    - cron: '0 2 * * *'
-  workflow_dispatch: # manual trigger
+    - cron: '0 2 * * *' # daily at 02:00 UTC
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,8 +13,8 @@ jobs:
       image: debian:sid
 
     env:
-      BASE_VERSION: 6.18   # Fixed major.minor kernel version
-      CUSTOM_VERSION: rzm   # Custom suffix for kernel
+      BASE_VERSION: "6.18"
+      CUSTOM_VERSION: "rzm"
 
     steps:
       - name: Checkout repository
@@ -27,21 +26,22 @@ jobs:
           apt-get install -y \
             build-essential bc bison flex libssl-dev libelf-dev dwarves pahole \
             squashfs-tools wget xz-utils ca-certificates gcc g++ binutils \
-            llvm clang kmod python3
+            llvm clang kmod python3 curl git
 
-      - name: Detect latest patch for $BASE_VERSION
+      - name: "Detect latest patch for ${BASE_VERSION}"
         id: detect_kernel
         run: |
           LATEST=$(curl -s https://www.kernel.org/releases.json \
             | python3 -c "import sys,json; data=json.load(sys.stdin); \
-                for r in data['releases']: \
-                  if r['version'].startswith('${BASE_VERSION}.'): print(r['version'])" \
-                    | sort -V | tail -1)
+for r in data['releases']: \
+    if r['version'].startswith('${BASE_VERSION}.'): print(r['version'])" \
+            | sort -V | tail -1)
+
           if [ -z "$LATEST" ]; then
-            echo "No release found for ${BASE_VERSION}. Exiting."
+            echo "No release found for ${BASE_VERSION}"
             exit 1
           fi
-          echo "Latest kernel patch: $LATEST"
+
           echo "KERNEL_VERSION=$LATEST" >> $GITHUB_ENV
 
       - name: Download Linux kernel
@@ -53,7 +53,7 @@ jobs:
       - name: Copy provided .config
         run: cp .config linux/.config
 
-      - name: Auto-update config (unattended)
+      - name: Auto-update config
         working-directory: linux
         run: yes "" | make olddefconfig
 
@@ -69,40 +69,39 @@ jobs:
         working-directory: linux
         run: make modules -j"$(nproc)"
 
-      - name: Install modules into staging directory
+      - name: Install modules into staging
         working-directory: linux
         run: |
           mkdir -p ../staging
           make modules_install INSTALL_MOD_PATH=../staging
 
-      - name: Strip unneeded symbols from modules
+      - name: Export KMOD_VERSION
         run: |
-          KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
-          MODULES_DIR=staging/lib/modules/
-          find $MODULES_DIR -type f -name '*.ko' -exec strip --strip-unneeded {} \;
+          echo "KMOD_VERSION=$KERNEL_VERSION-$(cat linux/.config.localversion)" >> $GITHUB_ENV
+
+      - name: Strip unneeded symbols
+        run: |
+          find staging/lib/modules -type f -name '*.ko' -exec strip --strip-unneeded {} \;
 
       - name: Prepare SquashFS root
         run: |
-          KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
           mkdir -p squashfs-root/usr/lib/modules
           cp -arf staging/lib/modules/* squashfs-root/usr/lib/modules/
           mkdir -p squashfs-root/boot
           cp linux/arch/x86/boot/bzImage squashfs-root/boot/vmlinuz
 
-      - name: Create SquashFS image with max XZ compression
+      - name: Create SquashFS image
         run: |
-          KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
           mksquashfs squashfs-root huge-kernel-${KMOD_VERSION}.sfs \
             -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
 
-      - name: Package SquashFS into XZ-compressed tarball
+      - name: Package kernel + squashfs
         run: |
-          mv -f linux/arch/x86/boot/bzImage linux/arch/x86/boot/vmlinuz
-          KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
-          tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs
+          tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz \
+            linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs
 
       - name: Upload final tarball
         uses: actions/upload-artifact@v4
         with:
-          name: huge-kernel-${KMOD_VERSION}
-          path: huge-kernel-${KMOD_VERSION}.tar.xz
+          name: huge-kernel-${{ env.KMOD_VERSION }}
+          path: huge-kernel-${{ env.KMOD_VERSION }}.tar.xz
