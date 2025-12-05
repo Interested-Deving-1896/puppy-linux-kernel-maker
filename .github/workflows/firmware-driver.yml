@@ -109,19 +109,29 @@ jobs:
 
       - name: Prepare SquashFS root
         run: |
-          mkdir -p squashfs-root/usr/lib
-          cp -a linux-firmware-current squashfs-root/usr/lib/firmware
-          rm -rf squashfs-root/usr/lib/firmware/.git*
-          rm -f squashfs-root/usr/lib/firmware/.editorconfig
-          rm -f squashfs-root/usr/lib/firmware/.codespell*
-          rm -f squashfs-root/usr/lib/firmware/.pre-commit*
+          mkdir -p squashfs-root/lib
+          mkdir -p squashfs-root-usrmerge/usr/lib
+          cp -a linux-firmware-current squashfs-root/lib/firmware
+          cp -a linux-firmware-current squashfs-root-usrmerge/usr/lib/firmware
+          rm -rf squashfs-root/lib/firmware/.git*
+          rm -f squashfs-root/lib/firmware/.editorconfig
+          rm -f squashfs-root/lib/firmware/.codespell*
+          rm -f squashfs-root/lib/firmware/.pre-commit*
+          rm -rf squashfs-root-usrmerge/usr/lib/firmware/.git*
+          rm -f squashfs-root-usrmerge/usr/lib/firmware/.editorconfig
+          rm -f squashfs-root-usrmerge/usr/lib/firmware/.codespell*
+          rm -f squashfs-root-usrmerge/usr/lib/firmware/.pre-commit*
+          
       - name: Create SquashFS image (XZ max compression)
         run: |
           mksquashfs squashfs-root linux-firmware-pconly.sfs \
             -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+          mksquashfs squashfs-root-usrmerge linux-firmware-pconly-usrmerge.sfs \
+            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86            
 
       - name: Upload firmware image
         uses: actions/upload-artifact@v4
         with:
           name: linux-firmware-pconly
-          path: linux-firmware-pconly.sfs
+          path: |
+                *.sfs
