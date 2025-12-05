@@ -34,9 +34,9 @@ jobs:
         run: |
           LATEST=$(curl -s https://www.kernel.org/releases.json \
             | python3 -c "import sys,json; data=json.load(sys.stdin); \
-for r in data['releases']: \
-    if r['version'].startswith('${BASE_VERSION}.'): print(r['version'])" \
-            | sort -V | tail -1)
+                for r in data['releases']: \
+                  if r['version'].startswith('${BASE_VERSION}.'): print(r['version'])" \
+                    | sort -V | tail -1)
           if [ -z "$LATEST" ]; then
             echo "No release found for ${BASE_VERSION}. Exiting."
             exit 1
