@@ -26,29 +26,32 @@ jobs:
           apt-get install -y \
             build-essential bc bison flex libssl-dev libelf-dev dwarves pahole \
             squashfs-tools wget xz-utils ca-certificates gcc g++ binutils \
-            llvm clang kmod python3 curl git
+            llvm clang kmod python3 curl git jq patch
 
-      - name: Detect latest patch for base version
+      - name: Detect latest patch for ${BASE_VERSION}
         id: detect_kernel
         run: |
-          LATEST=$(curl -s https://www.kernel.org/releases.json \
-            | python3 - << 'EOF'
-import sys, json, os
-base = os.environ["BASE_VERSION"] + "."
-data = json.load(sys.stdin)
-versions = sorted(
-    [r["version"] for r in data["releases"] if r["version"].startswith(base)],
-    key=lambda x: [int(p) for p in x.split(".")]
-)
-print(versions[-1] if versions else "")
-EOF
-          )
-          
+          set -euo pipefail
+
+          echo "Checking kernel.org releases for base ${BASE_VERSION}..."
+
+          # Fetch releases.json once
+          releases_json="$(curl -sS https://www.kernel.org/releases.json)"
+
+          # Use jq to filter versions that start with BASE_VERSION + '.' then sort and get last
+          LATEST=$(printf '%s\n' "$releases_json" \
+            | jq -r --arg base "${BASE_VERSION}." '.releases[]
+                | select(.version | startswith($base))
+                | .version' \
+            | sort -V \
+            | tail -n 1)
+
           if [ -z "$LATEST" ]; then
-            echo "No release found for ${BASE_VERSION}"
+            echo "No release found for ${BASE_VERSION}. Exiting."
             exit 1
           fi
 
+          echo "Detected latest kernel patch: $LATEST"
           echo "KERNEL_VERSION=$LATEST" >> $GITHUB_ENV
 
       - name: Download Linux kernel
