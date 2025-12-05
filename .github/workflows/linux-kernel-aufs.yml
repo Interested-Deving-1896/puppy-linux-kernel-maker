@@ -17,6 +17,7 @@ jobs:
       CUSTOM_VERSION: "rzm"
       AUFS_REPO: "https://github.com/sfjro/aufs-standalone.git"
       AUFS_BRANCH: "aufs6.x-rcN"  # Replace with desired AUFS branch
+      AUFS_PATCH_FILES: "aufs6-kbuild.patch aufs6-base.patch aufs6-mmap.patch aufs6-standalone.patch"
 
     steps:
       - name: Checkout repository
@@ -67,10 +68,14 @@ jobs:
           set -e
           cd linux
           PATCH_DIR="../aufs"
-          for patch in "$PATCH_DIR"/aufs*.patch; do
-            if [ -f "$patch" ]; then
-              echo "Applying patch $patch..."
-              patch -p1 < "$patch" || echo "Patch $patch failed, skipping"
+          cp -rf $PATCH_DIR/fs ./ 
+          cp -rf $PATCH_DIR/Documentation ./
+          cp -f $PATCH_DIR/include/uapi/linux/aufs_type.h include/linux/
+          cp -rf $PATCH_DIR/include ./
+          for patch in $AUFS_PATCH_FILES ; do
+            if [ -f "$PATCH_DIR/$patch" ]; then
+              echo "Applying patch $PATCH_DIR/$patch..."
+              patch -p1 < "$PATCH_DIR/$patch" || echo "Patch $patch failed, skipping"
             fi
           done
 
