@@ -1,0 +1,142 @@
+name: Linux Kernel Build with AUFS
+
+on:
+  schedule:
+    # Weekly patch check: Monday 02:00 UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch: # manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: debian:sid
+
+    env:
+      BASE_VERSION: 6.18   # Fixed major.minor kernel version
+      CUSTOM_VERSION: rzm   # Custom suffix for kernel
+      AUFS_REPO: "https://github.com/sfjro/aufs-standalone.git"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            build-essential bc bison flex libssl-dev libelf-dev dwarves pahole \
+            squashfs-tools wget xz-utils ca-certificates gcc g++ binutils \
+            llvm clang kmod python3 git patch
+
+      - name: Detect latest kernel patch
+        id: detect_kernel
+        run: |
+          LATEST=$(curl -s https://www.kernel.org/releases.json \
+            | python3 -c "import sys,json; data=json.load(sys.stdin); \
+for r in data['releases']: \
+    if r['version'].startswith('${BASE_VERSION}.'): print(r['version'])" \
+            | sort -V | tail -1)
+          if [ -z "$LATEST" ]; then
+            echo "No release found for ${BASE_VERSION}. Exiting."
+            exit 1
+          fi
+          echo "Latest kernel patch: $LATEST"
+          echo "KERNEL_VERSION=$LATEST" >> $GITHUB_ENV
+
+      - name: Download Linux kernel
+        run: |
+          wget https://cdn.kernel.org/pub/linux/kernel/v${BASE_VERSION%%.*}.x/linux-$KERNEL_VERSION.tar.xz
+          tar -xf linux-$KERNEL_VERSION.tar.xz
+          mv linux-$KERNEL_VERSION linux
+
+      - name: Clone aufs-standalone
+        run: git clone --depth=1 $AUFS_REPO aufs
+
+      - name: Detect AUFS branch for kernel
+        id: detect_aufs
+        run: |
+          MAJOR_MINOR=$(echo "$KERNEL_VERSION" | cut -d. -f1,2)
+          # Try exact match branch
+          if git -C aufs show-ref --quiet refs/heads/aufs$MAJOR_MINOR; then
+            echo "AUFS_BRANCH=aufs$MAJOR_MINOR" >> $GITHUB_ENV
+          else
+            # fallback: latest aufs6.* branch
+            BF=$(git -C aufs branch -r | grep -o 'origin/aufs6\.[0-9]\+' | sed 's@origin/@@' | sort -V | tail -1)
+            if [ -n "$BF" ]; then
+              echo "AUFS_BRANCH=$BF" >> $GITHUB_ENV
+            else
+              echo "AUFS_BRANCH=none" >> $GITHUB_ENV
+            fi
+          fi
+          echo "Selected AUFS branch: $AUFS_BRANCH"
+
+      - name: Apply AUFS patch if available
+        if: env.AUFS_BRANCH != 'none'
+        run: |
+          set -e
+          cd linux
+          git -C ../aufs checkout $AUFS_BRANCH
+          # copy patches from aufs repo
+          for p in ../aufs/aufs6-kbuild.patch ../aufs/aufs6-base.patch ../aufs/aufs6-standalone.patch; do
+            if [ -f "$p" ]; then
+              echo "Applying patch $p"
+              patch -p1 < "$p" || echo "Patch $p failed, continuing without AUFS"
+            fi
+          done
+
+      - name: Copy provided .config
+        run: cp .config-aufs linux/.config
+
+      - name: Auto-update config (unattended)
+        working-directory: linux
+        run: yes "" | make olddefconfig
+
+      - name: Set custom version string
+        working-directory: linux
+        run: echo "${CUSTOM_VERSION}" > .config.localversion
+
+      - name: Build kernel image
+        working-directory: linux
+        run: make -j"$(nproc)" bzImage || echo "Kernel build failed"
+
+      - name: Build modules
+        working-directory: linux
+        run: make modules -j"$(nproc)"
+
+      - name: Install modules into staging directory
+        working-directory: linux
+        run: |
+          mkdir -p ../staging
+          make modules_install INSTALL_MOD_PATH=../staging
+
+      - name: Strip unneeded symbols from modules
+        run: |
+          KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
+          MODULES_DIR=staging/lib/modules/
+          find $MODULES_DIR -type f -name '*.ko' -exec strip --strip-unneeded {} \;
+
+      - name: Prepare SquashFS root (modules only)
+        run: |
+          KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
+          mkdir -p squashfs-root/usr/lib/modules
+          cp -arf staging/lib/modules/* squashfs-root/usr/lib/modules/
+
+      - name: Create SquashFS image with max XZ compression
+        run: |
+          KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
+          mksquashfs squashfs-root huge-kernel-${KMOD_VERSION}.sfs \
+            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+
+      - name: Package kernel image + modules SquashFS into tarball
+        run: |
+          mv -f linux/arch/x86/boot/bzImage linux/arch/x86/boot/vmlinuz
+          KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
+          tar -cJf huge-kernel-${KMOD_VERSION}-aufs.tar.xz linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs
+
+      - name: Upload final tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: huge-kernel-${KMOD_VERSION}
+          path: huge-kernel-${KMOD_VERSION}-aufs.tar.xz
