@@ -97,7 +97,7 @@ for r in data['releases']: \
 
       - name: Package SquashFS into XZ-compressed tarball
         run: |
-          mv -f linux/arch/x86/boot/bzImage cp linux/arch/x86/boot/vmlinuz
+          mv -f linux/arch/x86/boot/bzImage linux/arch/x86/boot/vmlinuz
           KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
           tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs
 
