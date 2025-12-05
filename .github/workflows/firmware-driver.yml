@@ -112,10 +112,11 @@ jobs:
       - name: Prepare SquashFS root
         run: |
           mkdir -p squashfs-root/usr/lib
-          rm -rf linux-firmware-current/.git*
-          rm -f linux-firmware-current/.*
           cp -a linux-firmware-current squashfs-root/usr/lib/firmware
-
+          rm -rf squashfs-root/usr/lib/firmware/.git*
+          rm -f squashfs-root/usr/lib/firmware/.editorconfig
+          rm -f squashfs-root/usr/lib/firmware/.codespell*
+          rm -f squashfs-root/usr/lib/firmware/.pre-commit*
       - name: Create SquashFS image (XZ max compression)
         run: |
           mksquashfs squashfs-root linux-firmware-pconly.sfs \
