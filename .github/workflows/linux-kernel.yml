@@ -15,7 +15,7 @@ jobs:
 
     env:
       BASE_VERSION: 6.18   # Fixed major.minor kernel version
-      CUSTOM_VERSION: foo   # Custom suffix for kernel
+      CUSTOM_VERSION: rzm   # Custom suffix for kernel
 
     steps:
       - name: Checkout repository
@@ -59,7 +59,7 @@ for r in data['releases']: \
 
       - name: Set custom version string
         working-directory: linux
-        run: echo "-${CUSTOM_VERSION}" > .config.localversion
+        run: echo "${CUSTOM_VERSION}" > .config.localversion
 
       - name: Build kernel image
         working-directory: linux
@@ -78,14 +78,14 @@ for r in data['releases']: \
       - name: Strip unneeded symbols from modules
         run: |
           KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
-          MODULES_DIR=staging/lib/modules/$KMOD_VERSION
+          MODULES_DIR=staging/lib/modules/
           find $MODULES_DIR -type f -name '*.ko' -exec strip --strip-unneeded {} \;
 
       - name: Prepare SquashFS root
         run: |
           KMOD_VERSION="$KERNEL_VERSION-$(cat linux/.config.localversion)"
           mkdir -p squashfs-root/usr/lib/modules
-          cp -a staging/lib/modules/$KMOD_VERSION squashfs-root/usr/lib/modules/
+          cp -arf staging/lib/modules/* squashfs-root/usr/lib/modules/
           mkdir -p squashfs-root/boot
           cp linux/arch/x86/boot/bzImage squashfs-root/boot/vmlinuz
 
