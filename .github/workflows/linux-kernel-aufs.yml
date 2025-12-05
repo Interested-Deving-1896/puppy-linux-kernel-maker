@@ -136,11 +136,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}
-          path: huge-kernel-${{ env.KMOD_VERSION }}.sfs         
+          path: huge-kernel-${{ env.KMOD_VERSION }}.tar.xz        
 
       - name: Upload kernel (usrmerge)
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge
-          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.sfs         
+          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.tar.xz     
 
