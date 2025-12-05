@@ -60,18 +60,19 @@ jobs:
       - name: Prepare SquashFS root
         run: |
           mkdir -p squashfs-root/usr/lib
+          rm -rf linux-firmware-current/.git
+          rm -f linux-firmware-current/.gitignore
+          rm -f linux-firmware-current/.codespell
+          rm -f linux-firmware-current/.editorconfig
+          rm -rf linux-firmware-current/.pre-commit*
           cp -a linux-firmware-current squashfs-root/usr/lib/firmware
 
       - name: Create SquashFS image with max XZ compression
         run: |
-          mksquashfs squashfs-root linux-firmware-current.squashfs -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
-
-      - name: Package SquashFS into XZ-compressed tarball
-        run: |
-          tar -cJf linux-firmware-current.tar.xz linux-firmware-current.squashfs
+          mksquashfs squashfs-root linux-firmware-current.sfs -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
 
       - name: Upload firmware tarball
         uses: actions/upload-artifact@v4
         with:
           name: linux-firmware-current
-          path: linux-firmware-current.tar.xz
+          path: linux-firmware-current.sfs
