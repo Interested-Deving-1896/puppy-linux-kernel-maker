@@ -37,9 +37,7 @@ jobs:
           # DIRECTORIES TO REMOVE (non-PC or non-x86)
           REMOVE_DIRS = [
               # ARM / phone / embedded
-              "qcom", "mediatek", "mrvl", "marvell", "rockchip",
-              "ti-connectivity", "brcmfmac", "broadcom", "cxgb4",
-              "ath10k", "ath11k", "wil6210", "wcn36xx",
+              "wil6210", "wcn36xx",
               # Automotive / industrial / IoT
               "adsp", "aspeed", "nvidia/tegra", "serial",
               # Server NICs not used for consumer PCs
