@@ -1,0 +1,135 @@
+name: Puppy Linux Kernel Build + AUFS
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # daily at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: debian:sid
+
+    env:
+      BASE_VERSION: "6.18"
+      CUSTOM_VERSION: "rzm"
+      AUFS_REPO: "https://github.com/sfjro/aufs-standalone.git"
+      AUFS_BRANCH: "aufs6.x-rcN"  # Replace with desired AUFS branch
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            build-essential bc bison flex libssl-dev libelf-dev dwarves pahole \
+            squashfs-tools wget xz-utils ca-certificates gcc g++ binutils \
+            llvm clang kmod python3 curl git jq patch
+
+      - name: Detect latest patch for ${BASE_VERSION}
+        id: detect_kernel
+        run: |
+          set -euo pipefail
+
+          echo "Checking kernel.org releases for base ${BASE_VERSION}..."
+          releases_json="$(curl -sS https://www.kernel.org/releases.json)"
+
+          LATEST=$(printf '%s\n' "$releases_json" \
+            | jq -r --arg base "${BASE_VERSION}." '.releases[]
+                | select(.version | startswith($base))
+                | .version' \
+            | sort -V \
+            | tail -n 1)
+
+          if [ -z "$LATEST" ]; then
+            echo "No patch found. Using base ${BASE_VERSION}"
+            echo "KERNEL_VERSION=$BASE_VERSION" >> $GITHUB_ENV
+          else
+            echo "Detected latest kernel patch: $LATEST"
+            echo "KERNEL_VERSION=$LATEST" >> $GITHUB_ENV
+          fi
+
+      - name: Download Linux kernel
+        run: |
+          wget https://cdn.kernel.org/pub/linux/kernel/v${BASE_VERSION%%.*}.x/linux-$KERNEL_VERSION.tar.xz
+          tar -xf linux-$KERNEL_VERSION.tar.xz
+          mv linux-$KERNEL_VERSION linux
+
+      - name: Clone AUFS repository
+        run: git clone --depth=1 --branch $AUFS_BRANCH $AUFS_REPO aufs
+
+      - name: Apply AUFS patches
+        run: |
+          set -e
+          cd linux
+          PATCH_DIR="../aufs"
+          for patch in "$PATCH_DIR"/aufs*.patch; do
+            if [ -f "$patch" ]; then
+              echo "Applying patch $patch..."
+              patch -p1 < "$patch" || echo "Patch $patch failed, skipping"
+            fi
+          done
+
+      - name: Copy provided .config
+        run: cp .config linux/.config
+
+      - name: Auto-update config
+        working-directory: linux
+        run: yes "" | make olddefconfig
+
+      - name: Set custom version string
+        working-directory: linux
+        run: echo "${CUSTOM_VERSION}" > .config.localversion
+
+      - name: Build kernel image
+        working-directory: linux
+        run: make -j"$(nproc)" bzImage
+
+      - name: Build modules
+        working-directory: linux
+        run: make modules -j"$(nproc)"
+
+      - name: Install modules into staging
+        working-directory: linux
+        run: |
+          mkdir -p ../staging
+          make modules_install INSTALL_MOD_PATH=../staging
+
+      - name: Export KMOD_VERSION
+        run: echo "KMOD_VERSION=$KERNEL_VERSION-$(cat linux/.config.localversion)" >> $GITHUB_ENV
+
+      - name: Strip unneeded symbols
+        run: find staging/lib/modules -type f -name '*.ko' -exec strip --strip-unneeded {} \;
+
+      - name: Prepare SquashFS root
+        run: |
+          mkdir -p squashfs-root/lib/modules
+          mkdir -p squashfs-root-usrmerge/usr/lib/modules
+          cp -arf staging/lib/modules/* squashfs-root/lib/modules/
+          cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
+          cp linux/arch/x86/boot/bzImage linux/arch/x86/boot/vmlinuz
+
+      - name: Create SquashFS image
+        run: |
+          mksquashfs squashfs-root huge-kernel-${KMOD_VERSION}.sfs \
+            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+          mksquashfs squashfs-root-usrmerge huge-kernel-${KMOD_VERSION}-usrmerge.sfs \
+            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+
+      - name: Package kernel + squashfs
+        run: |
+          tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz \
+            linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}.sfs
+          tar -cJf huge-kernel-${KMOD_VERSION}-usrmerge.tar.xz \
+            linux/arch/x86/boot/vmlinuz huge-kernel-${KMOD_VERSION}-usrmerge.sfs
+
+      - name: Upload final tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: huge-kernel-${{ env.KMOD_VERSION }}
+          path: |
+                 *.tar.xz
