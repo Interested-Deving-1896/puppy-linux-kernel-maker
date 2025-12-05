@@ -1,0 +1,94 @@
+name: Linux Kernel Build + vmlinuz + Modules Tarball
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: debian:sid
+
+    env:
+      KERNEL_VERSION: 6.18    # <-- Kernel version to download
+      CUSTOM_VERSION: rzm       # <-- Custom kernel suffix
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            build-essential bc bison flex libssl-dev libelf-dev dwarves pahole \
+            squashfs-tools wget xz-utils ca-certificates gcc g++ binutils \
+            llvm clang kmod
+
+      - name: Download Linux kernel
+        run: |
+          KVER=${KERNEL_VERSION}
+          wget https://cdn.kernel.org/pub/linux/kernel/v${KVER%%.*}.x/linux-$KVER.tar.xz
+          tar -xf linux-$KVER.tar.xz
+          mv linux-$KVER linux
+
+      - name: Copy provided .config
+        run: cp .config linux/.config
+
+      - name: Auto-update config (unattended)
+        working-directory: linux
+        run: yes "" | make olddefconfig
+
+      - name: Set custom version string
+        working-directory: linux
+        run: echo "-${CUSTOM_VERSION}" > .config.localversion
+
+      - name: Build kernel image
+        working-directory: linux
+        run: make -j"$(nproc)" bzImage
+
+      - name: Build modules
+        working-directory: linux
+        run: make modules -j"$(nproc)"
+
+      - name: Install modules into staging directory
+        working-directory: linux
+        run: |
+          mkdir -p ../staging
+          make modules_install INSTALL_MOD_PATH=../staging
+
+      - name: Strip unneeded symbols from modules
+        run: |
+          KMOD_VERSION="${KERNEL_VERSION}-$(cat linux/.config.localversion)"
+          MODULES_DIR=staging/lib/modules/$KMOD_VERSION
+          echo "Stripping unneeded symbols in $MODULES_DIR"
+          find $MODULES_DIR -type f -name '*.ko' -exec strip --strip-unneeded {} \;
+
+      - name: Prepare SquashFS root
+        run: |
+          KMOD_VERSION="${KERNEL_VERSION}-$(cat linux/.config.localversion)"
+          mkdir -p squashfs-root/usr/lib/modules
+          # Copy all modules including modules.* files
+          cp -a staging/lib/modules/$KMOD_VERSION squashfs-root/usr/lib/modules/
+          # Copy kernel image as vmlinuz into root of SquashFS
+          mkdir -p squashfs-root/boot
+          cp linux/arch/x86/boot/bzImage squashfs-root/boot/vmlinuz
+
+      - name: Create SquashFS image with maximum XZ compression
+        run: |
+          KMOD_VERSION="${KERNEL_VERSION}-$(cat linux/.config.localversion)"
+          mksquashfs squashfs-root huge-kernel-${KMOD_VERSION}.squashfs -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+
+      - name: Package SquashFS into XZ-compressed tarball
+        run: |
+          KMOD_VERSION="${KERNEL_VERSION}-$(cat linux/.config.localversion)"
+          tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz huge-kernel-${KMOD_VERSION}.squashfs
+
+      - name: Upload final tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: huge-kernel-${KMOD_VERSION}
+          path: huge-kernel-${KMOD_VERSION}.tar.xz
