@@ -10,3 +10,10 @@ How to use this:
 * Click All Workflows to see the build progress
 * Once complete, On "All workflows" select the finished workflow.
 * Go to artifacts section to download the output build
+
+There are three workflow files:
+* firmware-driver.yml - for creating linux firmware driver
+* linux-kernel - for creating linux kernel without any patches
+* linux-kernel-aufs - for creating linux kernel with AUFS patch
+
+Tips: If there is a new linux kernel version. Or want to compile other kernel version. Just create new branch and edit the environment section of workflow files. Then run workflow on the newly created branch
