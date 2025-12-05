@@ -2,7 +2,7 @@ name: Puppy Linux Kernel Build + AUFS
 
 on:
   schedule:
-    - cron: '0 2 * * *' # daily at 02:00 UTC
+    - cron: '0 2 */20 * *' # daily at 02:00 UTC
   workflow_dispatch:
 
 jobs:
