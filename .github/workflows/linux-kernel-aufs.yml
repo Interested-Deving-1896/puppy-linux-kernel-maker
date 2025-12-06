@@ -81,7 +81,7 @@ jobs:
 
       - name: Copy provided .config
         run: |
-              sed -i -e "s#EXTRAVERSION\ =.*#EXTRAVERSION=$CUSTOM_VERSION#" Makefile
+              sed -i -e "s#^EXTRAVERSION\ =.*#EXTRAVERSION=-$CUSTOM_VERSION#" linux/Makefile
               cp .config-aufs linux/.config
 
       - name: Auto-update config
