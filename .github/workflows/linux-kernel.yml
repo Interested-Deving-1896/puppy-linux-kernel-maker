@@ -100,7 +100,7 @@ jobs:
           mkdir -p squashfs-root-usrmerge/usr/lib/modules
           cp -arf staging/lib/modules/* squashfs-root/lib/modules/
           cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
-          cp linux/arch/x86/boot/bzImage linux/arch/x86/boot/vmlinuz
+          cp linux/arch/x86/boot/bzImage ./vmlinuz
 
       - name: Create SquashFS image
         run: |
@@ -112,9 +112,9 @@ jobs:
       - name: Package kernel + squashfs
         run: |
           tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz \
-            linux/arch/x86/boot/vmlinuz kernel-modules-${KMOD_VERSION}.sfs
+            vmlinuz kernel-modules-${KMOD_VERSION}.sfs
           tar -cJf huge-kernel-${KMOD_VERSION}-usrmerge.tar.xz \
-            linux/arch/x86/boot/vmlinuz kernel-modules-${KMOD_VERSION}-usrmerge.sfs
+            vmlinuz kernel-modules-${KMOD_VERSION}-usrmerge.sfs
 
       - name: Upload kernel (traditional)
         uses: actions/upload-artifact@v4
