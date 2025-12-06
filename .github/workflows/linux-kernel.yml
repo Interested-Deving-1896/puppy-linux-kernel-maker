@@ -62,7 +62,9 @@ jobs:
           mv linux-$KERNEL_VERSION linux
 
       - name: Copy provided .config
-        run: cp .config linux/.config
+        run: |
+              sed -i -e "s#^EXTRAVERSION\ =.*#EXTRAVERSION=-$CUSTOM_VERSION#" linux/Makefile
+              cp .config linux/.config
 
       - name: Auto-update config
         working-directory: linux
