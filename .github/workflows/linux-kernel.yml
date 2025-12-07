@@ -14,7 +14,7 @@ jobs:
 
     env:
       BASE_VERSION: "6.18"
-      CUSTOM_VERSION: "rzm"
+      CUSTOM_VERSION: "opkm"
 
     steps:
       - name: Checkout repository
