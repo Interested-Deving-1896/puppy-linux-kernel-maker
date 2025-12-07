@@ -119,6 +119,7 @@ jobs:
           cp -arf staging/lib/modules/* squashfs-root/lib/modules/
           cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
           cp linux/arch/x86/boot/bzImage ./vmlinuz
+          cp linux/.config kernel-${KMOD_VERSION}.config
 
       - name: Create SquashFS image
         run: |
@@ -144,5 +145,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge
-          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.tar.xz     
-
+          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.tar.xz  
+      
+      - name: Upload kernel config
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-${{ env.KMOD_VERSION }}.config
+          path: kernel-${{ env.KMOD_VERSION }}.config
