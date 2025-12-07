@@ -28,7 +28,7 @@ jobs:
             squashfs-tools wget xz-utils ca-certificates gcc g++ binutils \
             llvm clang kmod python3 curl git jq patch
 
-      - name: Detect latest patch for ${BASE_VERSION}
+      - name: Detect latest kernel patch
         id: detect_kernel
         run: |
           set -euo pipefail
