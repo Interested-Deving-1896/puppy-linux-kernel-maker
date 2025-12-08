@@ -34,12 +34,14 @@ jobs:
 
           # DIRECTORIES TO REMOVE (non-PC or non-x86)
           REMOVE_DIRS = [
+              # AMD microcode
+              "amd-ucode",
               # ARM / phone / embedded
               "wil6210", "wcn36xx",
               # Automotive / industrial / IoT
               "adsp", "aspeed", "nvidia/tegra", "serial",
               # Server NICs not used for consumer PCs
-              "liquidio", "cxgb3", "cxgb4", "qed",
+              "liquidio", "cxgb3", "cxgb4", "qed", "mellanox", "netronome",
               # Non-x86 architectures
               "mips", "powerpc", "riscv", "arm", "arm64",
               "ppc", "xtensa",
