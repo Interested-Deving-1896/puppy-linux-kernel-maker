@@ -54,6 +54,13 @@ jobs:
             echo "KERNEL_VERSION=$LATEST" >> $GITHUB_ENV
           fi
 
+      - name: Set custom version string
+        working-directory: linux
+        run: echo "${CUSTOM_VERSION}" > .config.localversion
+
+      - name: Export KMOD_VERSION
+        run: echo "KMOD_VERSION=$KERNEL_VERSION-$(cat linux/.config.localversion)" >> $GITHUB_ENV       
+          
       - name: Download Linux kernel
         run: |
           wget https://cdn.kernel.org/pub/linux/kernel/v${BASE_VERSION%%.*}.x/linux-$KERNEL_VERSION.tar.xz
@@ -86,16 +93,27 @@ jobs:
 
       - name: Auto-update config
         working-directory: linux
-        run: make olddefconfig
+        run: |
+              make olddefconfig
+              cp -f ./.config ./kernel-${KMOD_VERSION}.config
 
-      - name: Set custom version string
-        working-directory: linux
-        run: echo "${CUSTOM_VERSION}" > .config.localversion
-
+      - name: Upload kernel config
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-${{ env.KMOD_VERSION }}-config
+          path: kernel-${{ env.KMOD_VERSION }}.config              
+          
       - name: Build kernel image
         working-directory: linux
         run: make -j"$(nproc)" bzImage
 
+      - name: Upload kernel image
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-image-${{ env.KMOD_VERSION }}
+          path: | 
+                linux/arch/x86/boot/bzImage
+        
       - name: Build modules
         working-directory: linux
         run: make modules -j"$(nproc)"
@@ -105,9 +123,6 @@ jobs:
         run: |
           mkdir -p ../staging
           make modules_install INSTALL_MOD_PATH=../staging
-
-      - name: Export KMOD_VERSION
-        run: echo "KMOD_VERSION=$KERNEL_VERSION-$(cat linux/.config.localversion)" >> $GITHUB_ENV
 
       - name: Strip unneeded symbols
         run: find staging/lib/modules -type f -name '*.ko' -exec strip --strip-unneeded {} \;
@@ -120,7 +135,7 @@ jobs:
           cp -arf staging/lib/modules/* squashfs-root/lib/modules/
           cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
           cp linux/arch/x86/boot/bzImage ./vmlinuz
-          cp linux/.config kernel-${KMOD_VERSION}.config
+          cp -f linux/.config kernel-${KMOD_VERSION}.config
 
       - name: Create SquashFS image
         run: |
@@ -136,20 +151,16 @@ jobs:
           tar -cJf huge-kernel-${KMOD_VERSION}-usrmerge.tar.xz \
             vmlinuz huge-kernel-${KMOD_VERSION}-usrmerge.sfs
 
-      - name: Upload kernel (traditional)
+      - name: Upload kernel package (traditional)
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}
           path: huge-kernel-${{ env.KMOD_VERSION }}.tar.xz        
 
-      - name: Upload kernel (usrmerge)
+      - name: Upload kernel package (usrmerge)
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge
           path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.tar.xz  
       
-      - name: Upload kernel config
-        uses: actions/upload-artifact@v4
-        with:
-          name: kernel-${{ env.KMOD_VERSION }}-config
-          path: kernel-${{ env.KMOD_VERSION }}.config
+
