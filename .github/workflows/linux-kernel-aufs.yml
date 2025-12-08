@@ -109,12 +109,12 @@ jobs:
         working-directory: linux
         run: make -j"$(nproc)" bzImage
 
-      - name: Upload kernel image
-        uses: actions/upload-artifact@v4
-        with:
-          name: kernel-image-${{ env.KMOD_VERSION }}
-          path: | 
-                linux/arch/x86/boot/bzImage
+      #- name: Upload kernel image
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: kernel-image-${{ env.KMOD_VERSION }}
+      #    path: | 
+      #          linux/arch/x86/boot/bzImage
         
       - name: Build modules
         working-directory: linux
