@@ -136,7 +136,7 @@ jobs:
           path: |
                 linux-firmware-pconly.sfs
 
-      - name: Upload firmware image
+      - name: Upload firmware image usrmerge
         uses: actions/upload-artifact@v4
         with:
           name: linux-firmware-pconly-usrmerge
