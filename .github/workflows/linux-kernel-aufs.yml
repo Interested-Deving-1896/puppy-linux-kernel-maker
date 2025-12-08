@@ -116,6 +116,7 @@ jobs:
         run: |
           mkdir -p squashfs-root/lib/modules
           mkdir -p squashfs-root-usrmerge/usr/lib/modules
+          rm -f staging/lib/modules/${KMOD_VERSION}/build 2>/dev/null
           cp -arf staging/lib/modules/* squashfs-root/lib/modules/
           cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
           cp linux/arch/x86/boot/bzImage ./vmlinuz
