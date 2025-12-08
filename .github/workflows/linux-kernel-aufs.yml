@@ -86,7 +86,7 @@ jobs:
 
       - name: Auto-update config
         working-directory: linux
-        run: yes "" | make olddefconfig
+        run: make olddefconfig
 
       - name: Set custom version string
         working-directory: linux
