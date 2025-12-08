@@ -23,7 +23,7 @@ jobs:
         run: |
           git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git linux-firmware-current
 
-      - name: Remove non-PC and non-x86 firmware (Python)
+      - name: Remove non-PC and rarely used firmware (Python)
         shell: bash
         run: |
           python3 - <<'EOF'
@@ -32,20 +32,20 @@ jobs:
 
           base = "linux-firmware-current"
 
-          # DIRECTORIES TO REMOVE (non-PC or non-x86)
+          # DIRECTORIES TO REMOVE (rare / non-PC / embedded / server)
           REMOVE_DIRS = [
-              # AMD microcode
+              # CPU microcode (AMD is optional for PC)
               "amd-ucode",
-              # ARM / phone / embedded
-              "wil6210", "wcn36xx",
-              # Automotive / industrial / IoT
-              "adsp", "aspeed", "nvidia/tegra", "serial",
-              # Server NICs not used for consumer PCs
-              "liquidio", "cxgb3", "cxgb4", "qed", "mellanox", "netronome",
+              # ARM / phone / embedded / SoC boards
+              "wil6210", "wcn36xx", "ti-connectivity", "rockchip", "amlogic_vdec",
+              "ti-keystone", "r8a779x_usb3", "nxp_mc_firmware", "mediatek", "microchip", "siano",
+              # Automotive / industrial / IoT / FPGA
+              "adsp", "aspeed", "xc4000", "xc5000", "xc5000c", "go7007", "automotive", "industrial",
+              # Server NICs / Storage / SmartNICs
+              "liquidio", "cxgb3", "cxgb4", "qed", "mellanox", "netronome", "qla2xxx", "qla1280", "hfi1_firmware",
               # Non-x86 architectures
-              "mips", "powerpc", "riscv", "arm", "arm64",
-              "ppc", "xtensa",
-              # ChromeOS specific
+              "mips", "powerpc", "riscv", "arm", "arm64", "ppc", "xtensa",
+              # ChromeOS / other uncommon
               "google",
           ]
 
@@ -134,4 +134,11 @@ jobs:
         with:
           name: linux-firmware-pconly
           path: |
-                *.sfs
+                linux-firmware-pconly.sfs
+
+      - name: Upload firmware image
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-firmware-pconly-usrmerge
+          path: |
+                linux-firmware-pconly-usrmerge.sfs                
