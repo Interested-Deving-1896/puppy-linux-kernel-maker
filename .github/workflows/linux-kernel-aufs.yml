@@ -54,12 +54,6 @@ jobs:
             echo "KERNEL_VERSION=$LATEST" >> $GITHUB_ENV
           fi
 
-      - name: Set custom version string
-        working-directory: linux
-        run: echo "${CUSTOM_VERSION}" > .config.localversion
-
-      - name: Export KMOD_VERSION
-        run: echo "KMOD_VERSION=$KERNEL_VERSION-$(cat linux/.config.localversion)" >> $GITHUB_ENV       
           
       - name: Download Linux kernel
         run: |
@@ -85,6 +79,13 @@ jobs:
               patch -p1 < "$PATCH_DIR/$patch" || echo "Patch $patch failed, skipping"
             fi
           done
+
+      - name: Set custom version string
+        working-directory: linux
+        run: echo "${CUSTOM_VERSION}" > .config.localversion
+
+      - name: Export KMOD_VERSION
+        run: echo "KMOD_VERSION=$KERNEL_VERSION-$(cat linux/.config.localversion)" >> $GITHUB_ENV       
 
       - name: Copy provided .config
         run: |
