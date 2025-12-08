@@ -150,5 +150,5 @@ jobs:
       - name: Upload kernel config
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-${{ env.KMOD_VERSION }}.config
+          name: kernel-${{ env.KMOD_VERSION }}-config
           path: kernel-${{ env.KMOD_VERSION }}.config
