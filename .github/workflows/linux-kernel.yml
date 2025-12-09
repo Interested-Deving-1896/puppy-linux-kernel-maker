@@ -77,7 +77,7 @@ jobs:
       - name: Build kernel image
         working-directory: linux
         run: make -j"$(nproc)" bzImage
-
+        
       - name: Build modules
         working-directory: linux
         run: make modules -j"$(nproc)"
@@ -88,13 +88,14 @@ jobs:
           mkdir -p ../staging
           make modules_install INSTALL_MOD_PATH=../staging
 
-      - name: Export KMOD_VERSION
-        run: |
-          echo "KMOD_VERSION=$KERNEL_VERSION-$(cat linux/.config.localversion)" >> $GITHUB_ENV
-
       - name: Strip unneeded symbols
+        run: find staging/lib/modules -type f -name '*.ko' -exec strip --strip-unneeded {} \;
+
+      - name: Install kernel headers
+        working-directory: linux
         run: |
-          find staging/lib/modules -type f -name '*.ko' -exec strip --strip-unneeded {} \;
+          mkdir -p ../kernel-headers
+          make headers_install INSTALL_HDR_PATH=../kernel-headers
 
       - name: Prepare SquashFS root
         run: |
@@ -103,38 +104,47 @@ jobs:
           rm -f staging/lib/modules/${KMOD_VERSION}/build 2>/dev/null
           cp -arf staging/lib/modules/* squashfs-root/lib/modules/
           cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
+
+          mkdir -p kernel-headers-squashfs/usr/include
+          cp -a kernel-headers/include/* kernel-headers-squashfs/usr/include/ 
+          
           cp linux/arch/x86/boot/bzImage ./vmlinuz
-          cp linux/.config ./kernel-${KMOD_VERSION}.config
+          cp -f linux/.config kernel-${KMOD_VERSION}.config
 
-
-      - name: Create SquashFS image
+      - name: Create Kernel Modules SquashFS
         run: |
-          mksquashfs squashfs-root kernel-modules-${KMOD_VERSION}.sfs \
+          mksquashfs squashfs-root huge-kernel-${KMOD_VERSION}.sfs \
             -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
-          mksquashfs squashfs-root-usrmerge kernel-modules-${KMOD_VERSION}-usrmerge.sfs \
-            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86            
+          mksquashfs squashfs-root-usrmerge huge-kernel-${KMOD_VERSION}-usrmerge.sfs \
+            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
+
+      - name: Create Kernel Headers SquashFS
+        run: |
+          mksquashfs kernel-headers-squashfs \
+            kernel-headers-${KMOD_VERSION}.sfs \
+            -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
 
       - name: Package kernel + squashfs
         run: |
           tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz \
-            vmlinuz kernel-modules-${KMOD_VERSION}.sfs
+            vmlinuz huge-kernel-${KMOD_VERSION}.sfs
           tar -cJf huge-kernel-${KMOD_VERSION}-usrmerge.tar.xz \
-            vmlinuz kernel-modules-${KMOD_VERSION}-usrmerge.sfs
-
-      - name: Upload kernel (traditional)
+            vmlinuz huge-kernel-${KMOD_VERSION}-usrmerge.sfs
+            
+      - name: Upload kernel package (traditional)
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}
-          path: huge-kernel-${{ env.KMOD_VERSION }}.tar.xz         
+          path: huge-kernel-${{ env.KMOD_VERSION }}.tar.xz        
 
-      - name: Upload kernel (usrmerge)
+      - name: Upload kernel package (usrmerge)
         uses: actions/upload-artifact@v4
         with:
           name: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge
-          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.tar.xz
+          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.tar.xz  
 
-      - name: Upload kernel config
+      - name: Upload kernel headers
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-${{ env.KMOD_VERSION }}-config
-          path: kernel-${{ env.KMOD_VERSION }}.config
+          name: kernel-headers-${{ env.KMOD_VERSION }}
+          path: kernel-headers-${{ env.KMOD_VERSION }}.sfs  
