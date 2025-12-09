@@ -162,7 +162,6 @@ jobs:
           tar -cJf huge-kernel-${KMOD_VERSION}-usrmerge.tar.xz \
             vmlinuz huge-kernel-${KMOD_VERSION}-usrmerge.sfs
             
-
       - name: Upload kernel package (traditional)
         uses: actions/upload-artifact@v4
         with:
@@ -180,4 +179,3 @@ jobs:
         with:
           name: kernel-headers-${{ env.KMOD_VERSION }}
           path: kernel-headers-${{ env.KMOD_VERSION }}.sfs  
-
