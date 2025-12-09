@@ -10477,7 +10477,7 @@ CONFIG_AMD_XDNA=m
 # XDNA software simulator (dev only)
 CONFIG_AMD_XDNA_SIM=m
 
-CONFIG_ACCEL=m
+CONFIG_ACCEL=y
 
 # Accelerator userspace ABI
 CONFIG_ACCEL_ABI=y 
