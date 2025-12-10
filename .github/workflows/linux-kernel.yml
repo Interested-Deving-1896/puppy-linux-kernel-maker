@@ -26,7 +26,7 @@ jobs:
           apt-get install -y \
             build-essential bc bison flex libssl-dev libelf-dev dwarves pahole \
             squashfs-tools wget xz-utils ca-certificates gcc g++ binutils \
-            llvm clang kmod python3 curl git jq patch
+            llvm clang kmod python3 curl git jq patch rsync
 
       - name: Detect latest kernel patch
         id: detect_kernel
