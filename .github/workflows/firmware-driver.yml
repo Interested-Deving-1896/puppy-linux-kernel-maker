@@ -36,6 +36,17 @@ jobs:
           REMOVE_DIRS = [
               # CPU microcode (AMD is optional for PC)
               "amd-ucode",
+              #qualcomm
+              "x1e80100", "qdu100", "sm8250", "kaanapali",
+              "sdm845", "sa8775p", "sc8280xp", "qrb4210",
+              "sm8750", "qcs6490", "vpu", "apq8096", "qcm6490", "apq8016",
+              "qcm2290", "qcs615", "aic100", "qcs8300",
+              #atheros
+              "IPQ8074", "IPQ6018", "IPQ5018", "QCA2066", "QCA6698AQ", "QCN9074",
+              #marvel
+              "prestera",
+              #nxp
+              "dpaa2",
               # ARM / phone / embedded / SoC boards
               "wil6210", "wcn36xx", "ti-connectivity", "rockchip", "amlogic_vdec",
               "ti-keystone", "r8a779x_usb3", "nxp_mc_firmware", "mediatek", "microchip", "siano",
