@@ -102,12 +102,14 @@ jobs:
           mkdir -p squashfs-root/lib/modules
           mkdir -p squashfs-root-usrmerge/usr/lib/modules
          
-          cp -arf staging/lib/modules/* squashfs-root/lib/modules/
-          rm -rf squashfs-root/lib/modules/${KMOD_VERSION}/build 2>/dev/null
-          
+          cp -arf staging/lib/modules/* squashfs-root/lib/modules/          
           cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
-          rm -rf squashfs-root-usrmerge/usr/lib/modules/${KMOD_VERSION}/build 2>/dev/null
-          
+
+          for mdir in squashfs-root/lib/modules squashfs-root-usrmerge/usr/lib/modules
+          do
+             find ./$mdir -maxdepth 2 -type l -name "build" -exec rm -f {} \;
+          done
+
           mkdir -p kernel-headers-squashfs/usr/include
           cp -a kernel-headers/include/* kernel-headers-squashfs/usr/include/ 
           
