@@ -134,10 +134,10 @@ jobs:
           mkdir -p squashfs-root-usrmerge/usr/lib/modules
          
           cp -arf staging/lib/modules/* squashfs-root/lib/modules/
-          rm -rf squashfs-root/lib/modules/${KMOD_VERSION}/build 2>/dev/null
+          unlink squashfs-root/lib/modules/${KMOD_VERSION}/build
           
           cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
-          rm -rf squashfs-root-usrmerge/usr/lib/modules/${KMOD_VERSION}/build 2>/dev/null
+          unlink squashfs-root-usrmerge/usr/lib/modules/${KMOD_VERSION}/build
           
           mkdir -p kernel-headers-squashfs/usr/include
           cp -a kernel-headers/include/* kernel-headers-squashfs/usr/include/ 
