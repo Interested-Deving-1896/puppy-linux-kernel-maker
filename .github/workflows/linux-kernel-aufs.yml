@@ -137,7 +137,8 @@ jobs:
           rm -rf squashfs-root/lib/modules/${KMOD_VERSION}/build 2>/dev/null
           
           cp -arf staging/lib/modules/* squashfs-root-usrmerge/usr/lib/modules/
-          rm -rf squashfs-root/usr/lib/modules/${KMOD_VERSION}/build 2>/dev/null
+          rm -rf squashfs-root-usrmerge/usr/lib/modules/${KMOD_VERSION}/build 2>/dev/null
+          
           mkdir -p kernel-headers-squashfs/usr/include
           cp -a kernel-headers/include/* kernel-headers-squashfs/usr/include/ 
           
