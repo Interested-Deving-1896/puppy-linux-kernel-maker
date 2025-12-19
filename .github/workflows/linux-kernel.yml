@@ -61,6 +61,13 @@ jobs:
           tar -xf linux-$KERNEL_VERSION.tar.xz
           mv linux-$KERNEL_VERSION linux
 
+      - name: Set custom version string
+        working-directory: linux
+        run: echo "${CUSTOM_VERSION}" > .config.localversion
+
+      - name: Export KMOD_VERSION
+        run: echo "KMOD_VERSION=$KERNEL_VERSION-$(cat linux/.config.localversion)" >> $GITHUB_ENV       
+
       - name: Copy provided .config
         run: |
               sed -i -e "s#^EXTRAVERSION\ =.*#EXTRAVERSION=-$CUSTOM_VERSION#" linux/Makefile
