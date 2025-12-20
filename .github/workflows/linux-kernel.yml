@@ -75,7 +75,9 @@ jobs:
 
       - name: Auto-update config
         working-directory: linux
-        run: yes "" | make olddefconfig
+        run: |
+              make olddefconfig
+              cp -f .config kernel-${KMOD_VERSION}.config
 
       - name: Upload kernel config
         uses: actions/upload-artifact@v4
