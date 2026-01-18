@@ -112,8 +112,8 @@ jobs:
           cp -a linux-firmware-staging squashfs-root/lib/firmware
           cp -a linux-firmware-staging squashfs-root-usrmerge/usr/lib/firmware
 
-          mv -f squashfs-root/lib/firmware/intel/iwlwifi/* squashfs-root/lib/firmware/
-          mv -f squashfs-root-usrmerge/usr/lib/firmware/intel/iwlwifi/* squashfs-root-usrmerge/usr/lib/firmware/
+          #mv -f squashfs-root/lib/firmware/intel/iwlwifi/* squashfs-root/lib/firmware/
+          #mv -f squashfs-root-usrmerge/usr/lib/firmware/intel/iwlwifi/* squashfs-root-usrmerge/usr/lib/firmware/
           
           rm -rf squashfs-root/lib/firmware/.git*
           rm -f squashfs-root/lib/firmware/.editorconfig
