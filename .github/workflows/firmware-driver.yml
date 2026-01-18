@@ -155,7 +155,7 @@ jobs:
             wget $ALSAFW_URL -O $ALSAFW_FILE
             mkdir alsa-temp
             rpm2cpio $ALSAFW_FILE | cpio -idmv -D alsa-temp
-            cp -arf alsa-temp/usr/lib/firmware/* linux-firmware-staging
+            cp -arf alsa-temp/lib/firmware/* linux-firmware-staging
 
       - name: Prepare SquashFS root
         run: |
