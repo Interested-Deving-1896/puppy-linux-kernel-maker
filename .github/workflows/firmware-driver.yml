@@ -103,36 +103,6 @@ jobs:
 
           EOF
 
-      - name: Deduplicate firmware files (Python)
-        run: |
-          python3 - <<'EOF'
-          import hashlib, os
-
-          def sha256sum(path):
-              h = hashlib.sha256()
-              with open(path, "rb") as f:
-                  while True:
-                      b = f.read(8192)
-                      if not b: break
-                      h.update(b)
-              return h.hexdigest()
-
-          base = "linux-firmware-staging"
-          hashes = {}
-
-          for root, dirs, files in os.walk(base):
-              for f in files:
-                  p = os.path.join(root, f)
-                  h = sha256sum(p)
-                  if h in hashes:
-                      original = hashes[h]
-                      rel = os.path.relpath(original, os.path.dirname(p))
-                      os.remove(p)
-                      os.symlink(rel, p)
-                  else:
-                      hashes[h] = p
-          EOF
-
       - name: Prepare SquashFS root
         run: |
           
