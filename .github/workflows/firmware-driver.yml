@@ -120,7 +120,7 @@ jobs:
             mv ipw2100/LICENSE ipw2100/LICENSE.ipw2100-fw
 
             mkdir -p ipw2200
-            tar xf $IPW2200_FILE -C ipw2200
+            tar -xf $IPW2200_FILE -C ipw2200
             
             cp -af ipw2100/* linux-firmware-staging
             cp -af ipw2200/ipw2200-fw-3.1/* linux-firmware-staging
@@ -130,7 +130,7 @@ jobs:
 
             wget $B43_URL -O $B43_FILE
             mkdir b43-temp
-            tar xJf $B43_FILE -C b43-temp
+            tar -xJf $B43_FILE -C b43-temp
             cp -arf b43-temp/lib/firmware/* linux-firmware-staging
 
             B43L_URL="https://ftp.nluug.nl/pub/os/Linux/distr/pclinuxos/pclinuxos/apt/pclinuxos/64bit/RPMS.x86_64/b43legacy-firmware-1.0-3pclos2019.noarch.rpm"
@@ -140,6 +140,16 @@ jobs:
             mkdir b43l-temp
             rpm2cpio $B43L_FILE | cpio -idmv -D b43l-temp
             cp -arf b43l-temp/lib/firmware/* linux-firmware-staging
+            
+            SOF_URL="https://src.fedoraproject.org/repo/pkgs/alsa-firmware/sof-firmware-1.4.2.tar.bz2/sha512/58e9ef29453d14557f26aed1a67cd3bfa5865034de5f19a9f5041be5af02cc72c2eb21393e3d997fd59dd10c244408a0d78310803379d35c892cba8981a6c59e/sof-firmware-1.4.2.tar.bz2"
+            SOF_FILE=$(basename $SOF_URL)
+            
+            wget $SOF_URL -O $SOF_FILE
+            mkdir sof-temp
+            tar -xf $SOF_FILE -C sof-temp
+            cp -arf sof-temp/usr/lib/firmware/* linux-firmware-staging
+
+
 
       - name: Prepare SquashFS root
         run: |
