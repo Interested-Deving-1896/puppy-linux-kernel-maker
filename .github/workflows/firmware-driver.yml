@@ -1,4 +1,4 @@
-name: Linux Firmware Drivers (PC-Only)
+name: Linux Firmware Drivers (PC Only)
 
 on:
   workflow_dispatch:
