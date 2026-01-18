@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel rdfind
+          apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel rdfind rpm
 
       - name: Download latest Linux firmware
         run: |
@@ -103,7 +103,7 @@ jobs:
 
           EOF
 
-      - name: Fetching third-party drivers
+      - name: Fetching third-party firmware drivers
         run: |
 
             IPW2100_URL='https://src.fedoraproject.org/repo/pkgs/ipw2100-firmware/ipw2100-fw-1.3.tgz/46aa75bcda1a00efa841f9707bbbd113/ipw2100-fw-1.3.tgz'
@@ -116,11 +116,12 @@ jobs:
             wget $IPW2200_URL -O $IPW2200_FILE
             
             mkdir -p ipw2100
-            
             tar xf $IPW2100_FILE -C ipw2100
             mv ipw2100/LICENSE ipw2100/LICENSE.ipw2100-fw
-            
+
+            mkdir -p ipw2200
             tar xf $IPW2200_FILE -C ipw2200
+            
             cp -af ipw2100/* linux-firmware-staging
             cp -af ipw2200/ipw2200-fw-3.1/* linux-firmware-staging
 
@@ -131,6 +132,14 @@ jobs:
             mkdir b43-temp
             tar xJf $B43_FILE -C b43-temp
             cp -af b43-temp/lib/firmware/* linux-firmware-staging
+
+            B43L_URL="https://ftp.nluug.nl/pub/os/Linux/distr/pclinuxos/pclinuxos/apt/pclinuxos/64bit/RPMS.x86_64/b43legacy-firmware-1.0-3pclos2019.noarch.rpm"
+            B43L_FILE=$(basename $B43L_URL)
+
+            wget $B43L_URL -O $B43L_FILE
+            mkdir b43l-temp
+            rpm2cpio $B43L_FILE | cpio -idmv -D b43l-temp
+            cp -af b43l-temp/lib/firmware/* linux-firmware-staging
 
       - name: Prepare SquashFS root
         run: |
