@@ -131,7 +131,7 @@ jobs:
             wget $B43_URL -O $B43_FILE
             mkdir b43-temp
             tar xJf $B43_FILE -C b43-temp
-            cp -af b43-temp/lib/firmware/* linux-firmware-staging
+            cp -arf b43-temp/lib/firmware/* linux-firmware-staging
 
             B43L_URL="https://ftp.nluug.nl/pub/os/Linux/distr/pclinuxos/pclinuxos/apt/pclinuxos/64bit/RPMS.x86_64/b43legacy-firmware-1.0-3pclos2019.noarch.rpm"
             B43L_FILE=$(basename $B43L_URL)
@@ -139,7 +139,7 @@ jobs:
             wget $B43L_URL -O $B43L_FILE
             mkdir b43l-temp
             rpm2cpio $B43L_FILE | cpio -idmv -D b43l-temp
-            cp -af b43l-temp/lib/firmware/* linux-firmware-staging
+            cp -arf b43l-temp/lib/firmware/* linux-firmware-staging
 
       - name: Prepare SquashFS root
         run: |
