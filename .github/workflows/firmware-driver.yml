@@ -23,6 +23,18 @@ jobs:
         run: |
           git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git linux-firmware-current
 
+      - name: Isolate Linux firmware
+        run: |
+          mkdir -p linux-firmware-staging
+          
+          WKDIR=$(pwd)
+          
+          cd linux-firmware-current
+          chmod +x ./copy-firmware.sh
+          chmod +x ./dedup-firmware.sh
+          ./copy-firmware.sh $WKDIR/linux-firmware-staging 
+          ./dedup-firmware.sh $WKDIR/linux-firmware-staging 
+
       - name: Remove non-PC and rarely used firmware (Python)
         shell: bash
         run: |
@@ -30,7 +42,7 @@ jobs:
           import os
           import shutil
 
-          base = "linux-firmware-current"
+          base = "linux-firmware-staging"
 
           # DIRECTORIES TO REMOVE (rare / non-PC / embedded / server)
           REMOVE_DIRS = [
@@ -105,7 +117,7 @@ jobs:
                       h.update(b)
               return h.hexdigest()
 
-          base = "linux-firmware-current"
+          base = "linux-firmware-staging"
           hashes = {}
 
           for root, dirs, files in os.walk(base):
@@ -127,8 +139,8 @@ jobs:
           mkdir -p squashfs-root/lib
           mkdir -p squashfs-root-usrmerge/usr/lib
           
-          cp -a linux-firmware-current squashfs-root/lib/firmware
-          cp -a linux-firmware-current squashfs-root-usrmerge/usr/lib/firmware
+          cp -a linux-firmware-staging squashfs-root/lib/firmware
+          cp -a linux-firmware-staging squashfs-root-usrmerge/usr/lib/firmware
 
           mv -f squashfs-root/lib/firmware/intel/iwlwifi/* squashfs-root/lib/firmware/
           mv -f squashfs-root-usrmerge/usr/lib/firmware/intel/iwlwifi/* squashfs-root-usrmerge/usr/lib/firmware/
