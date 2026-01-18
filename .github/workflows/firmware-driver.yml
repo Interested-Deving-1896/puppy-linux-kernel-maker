@@ -112,17 +112,17 @@ jobs:
             IPW2100_FILE=$(basename $IPW2100_URL)
             IPW2200_FILE=$(basename $IPW2200_URL)
             
-            wget $IPW_2100_URL -O $IPW2100_FILE
-            wget $IPW_2200_URL -O $IPW2200_FILE
+            wget $IPW2100_URL -O $IPW2100_FILE
+            wget $IPW2200_URL -O $IPW2200_FILE
             
             mkdir -p ipw2100
             
             tar xf $IPW2100_FILE -C ipw2100
             mv ipw2100/LICENSE ipw2100/LICENSE.ipw2100-fw
             
-            tar xf $IPW2200_FILE
+            tar xf $IPW2200_FILE -C ipw2200
             cp -af ipw2100/* linux-firmware-staging
-            cp -af ipw2200-fw-3.1/* linux-firmware-staging
+            cp -af ipw2200/ipw2200-fw-3.1/* linux-firmware-staging
 
             B43_URL="https://slackware.halpanet.org/slackdce/packages/15.0/x86_64/network/b43-firmware/b43-firmware-6.30.163.46-fw-1_slackdce.txz"
             B43_FILE=$(basename $B43_URL)
