@@ -103,6 +103,35 @@ jobs:
 
           EOF
 
+      - name: Fetching third-party drivers
+        run: |
+
+            IPW2100_URL='https://src.fedoraproject.org/repo/pkgs/ipw2100-firmware/ipw2100-fw-1.3.tgz/46aa75bcda1a00efa841f9707bbbd113/ipw2100-fw-1.3.tgz'
+            IPW2200_URL='https://src.fedoraproject.org/repo/pkgs/ipw2200-firmware/ipw2200-fw-3.1.tgz/eaba788643c7cc7483dd67ace70f6e99/ipw2200-fw-3.1.tgz'
+
+            IPW2100_FILE=$(basename $IPW2100_URL)
+            IPW2200_FILE=$(basename $IPW2200_URL)
+            
+            wget $IPW_2100_URL -O $IPW2100_FILE
+            wget $IPW_2200_URL -O $IPW2200_FILE
+            
+            mkdir -p ipw2100
+            
+            tar xf $IPW2100_FILE -C ipw2100
+            mv ipw2100/LICENSE ipw2100/LICENSE.ipw2100-fw
+            
+            tar xf $IPW2200_FILE
+            cp -af ipw2100/* linux-firmware-staging
+            cp -af ipw2200-fw-3.1/* linux-firmware-staging
+
+            B43_URL="https://slackware.halpanet.org/slackdce/packages/15.0/x86_64/network/b43-firmware/b43-firmware-6.30.163.46-fw-1_slackdce.txz"
+            B43_FILE=$(basename $B43_URL)
+
+            wget $B43_URL -O $B43_FILE
+            mkdir b43-temp
+            tar xJf $B43_FILE -C b43-temp
+            cp -af b43-temp/lib/firmware/* linux-firmware-staging
+
       - name: Prepare SquashFS root
         run: |
           
@@ -111,10 +140,7 @@ jobs:
           
           cp -a linux-firmware-staging squashfs-root/lib/firmware
           cp -a linux-firmware-staging squashfs-root-usrmerge/usr/lib/firmware
-
-          #mv -f squashfs-root/lib/firmware/intel/iwlwifi/* squashfs-root/lib/firmware/
-          #mv -f squashfs-root-usrmerge/usr/lib/firmware/intel/iwlwifi/* squashfs-root-usrmerge/usr/lib/firmware/
-          
+        
           rm -rf squashfs-root/lib/firmware/.git*
           rm -f squashfs-root/lib/firmware/.editorconfig
           rm -f squashfs-root/lib/firmware/.codespell*
