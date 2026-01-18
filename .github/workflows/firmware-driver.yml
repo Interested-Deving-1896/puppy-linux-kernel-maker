@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel
+          apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel rdfind
 
       - name: Download latest Linux firmware
         run: |
