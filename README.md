@@ -1,4 +1,4 @@
-This is a just a simple online tool for creating custom kernel for Puppy Linux
+This is a just a simple online tool for creating custom kernel for Puppy Linux including firmware drivers
 
 How to use this:
 * Fork this repo
