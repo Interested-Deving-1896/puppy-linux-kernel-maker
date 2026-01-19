@@ -106,6 +106,10 @@ jobs:
       - name: Fetching third-party firmware drivers
         run: |
 
+            mkdir -p linux-firmware-additional/usr/share
+
+            #intel pro wireless
+            
             IPW2100_URL='https://src.fedoraproject.org/repo/pkgs/ipw2100-firmware/ipw2100-fw-1.3.tgz/46aa75bcda1a00efa841f9707bbbd113/ipw2100-fw-1.3.tgz'
             IPW2200_URL='https://src.fedoraproject.org/repo/pkgs/ipw2200-firmware/ipw2200-fw-3.1.tgz/eaba788643c7cc7483dd67ace70f6e99/ipw2200-fw-3.1.tgz'
 
@@ -125,6 +129,8 @@ jobs:
             cp -af ipw2100/* linux-firmware-staging
             cp -af ipw2200/ipw2200-fw-3.1/* linux-firmware-staging
 
+            #b43
+            
             B43_URL="https://slackware.halpanet.org/slackdce/packages/15.0/x86_64/network/b43-firmware/b43-firmware-6.30.163.46-fw-1_slackdce.txz"
             B43_FILE=$(basename $B43_URL)
 
@@ -133,6 +139,8 @@ jobs:
             tar -xJf $B43_FILE -C b43-temp
             cp -arf b43-temp/lib/firmware/* linux-firmware-staging
 
+            #b43-legacy
+            
             B43L_URL="https://ftp.nluug.nl/pub/os/Linux/distr/pclinuxos/pclinuxos/apt/pclinuxos/64bit/RPMS.x86_64/b43legacy-firmware-1.0-3pclos2019.noarch.rpm"
             B43L_FILE=$(basename $B43L_URL)
 
@@ -140,6 +148,8 @@ jobs:
             mkdir b43l-temp
             rpm2cpio $B43L_FILE | cpio -idmv -D b43l-temp
             cp -arf b43l-temp/lib/firmware/* linux-firmware-staging
+
+            #sof-firmware
             
             SOF_URL="https://src.fedoraproject.org/repo/pkgs/alsa-firmware/sof-firmware-1.4.2.tar.bz2/sha512/58e9ef29453d14557f26aed1a67cd3bfa5865034de5f19a9f5041be5af02cc72c2eb21393e3d997fd59dd10c244408a0d78310803379d35c892cba8981a6c59e/sof-firmware-1.4.2.tar.bz2"
             SOF_FILE=$(basename $SOF_URL)
@@ -149,13 +159,19 @@ jobs:
             tar -xf $SOF_FILE -C sof-temp
             cp -arf sof-temp/usr/lib/firmware/* linux-firmware-staging
 
+            #alsa firmware
+            
             ALSAFW_URL="	https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/a/alsa-firmware-1.2.4-15.fc43.noarch.rpm"
             ALSAFW_FILE=$(basename $ALSAFW_URL)
             
             wget $ALSAFW_URL -O $ALSAFW_FILE
             mkdir alsa-temp
             rpm2cpio $ALSAFW_FILE | cpio -idmv -D alsa-temp
+            mkdir -p linux-firmware-additional/usr/share/alsa/firmware
             cp -arf alsa-temp/lib/firmware/* linux-firmware-staging
+            cp -arf alsa-temp/usr/share/alsa/firmware/* linux-firmware-additional/usr/share/alsa/firmware/
+
+            #sane gt86xx
             
             SANE_GT_URL="https://p5n.pp.ru/~sergej/dl/2025/sane-gt68xx-firmware-1.0.tar.gz"
             SANE_GT_FILE=$(basename $SANE_GT_URL)
@@ -165,9 +181,20 @@ jobs:
             
             mkdir -p sane-temp
             tar -xf $SANE_GT_FILE -C sane-temp
-            mkdir -p linux-firmware-staging/usr/share/sane/gt68xx/
-            cp -f sane-temp/$SANE_GT_NAME/*.usb linux-firmware-staging/usr/share/sane/gt68xx/           
-            cp -f sane-temp/$SANE_GT_NAME/*.fw linux-firmware-staging/usr/share/sane/gt68xx/           
+            mkdir -p linux-firmware-additional/usr/share/sane/gt68xx
+            cp -f sane-temp/$SANE_GT_NAME/*.usb linux-firmware-additional/usr/share/sane/gt68xx/           
+            cp -f sane-temp/$SANE_GT_NAME/*.fw linux-firmware-additional/usr/share/sane/gt68xx/
+
+            #sigrok
+            
+            SIG_URL="https://slackware.halpanet.org/slackdce/packages/15.0/x86_64/misc/sigrok-firmware-fx2lafw/sigrok-firmware-fx2lafw-0.1.7-noarch-1_slackdce.txz"
+            SIG_FILE=$(basename $SIG_URL)
+
+            wget $SIG_URL -O $SIG_FILE
+            mkdir sig-temp
+            tar -xJf $SIG_FILE -C sig-temp
+            mkdir -p linux-firmware-additional/usr/share/sigrok-firmware
+            cp -arf sig-temp/usr/share/sigrok-firmware/* linux-firmware-additional/usr/share/sigrok-firmware/*
 
       - name: Prepare SquashFS root
         run: |
@@ -177,6 +204,8 @@ jobs:
           
           cp -a linux-firmware-staging squashfs-root/lib/firmware
           cp -a linux-firmware-staging squashfs-root-usrmerge/usr/lib/firmware
+          cp -ar linux-firmware-additional/* squashfs-root/
+          cp -ar linux-firmware-additional/* squashfs-root-usrmerge/          
         
           rm -rf squashfs-root/lib/firmware/.git*
           rm -f squashfs-root/lib/firmware/.editorconfig
