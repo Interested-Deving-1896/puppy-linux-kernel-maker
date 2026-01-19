@@ -116,7 +116,7 @@ jobs:
             wget $IPW2200_URL -O $IPW2200_FILE
             
             mkdir -p ipw2100
-            tar xf $IPW2100_FILE -C ipw2100
+            tar -xf $IPW2100_FILE -C ipw2100
             mv ipw2100/LICENSE ipw2100/LICENSE.ipw2100-fw
 
             mkdir -p ipw2200
@@ -156,6 +156,18 @@ jobs:
             mkdir alsa-temp
             rpm2cpio $ALSAFW_FILE | cpio -idmv -D alsa-temp
             cp -arf alsa-temp/lib/firmware/* linux-firmware-staging
+            
+            SANE_GT_URL="https://p5n.pp.ru/~sergej/dl/2025/sane-gt68xx-firmware-1.0.tar.gz"
+            SANE_GT_FILE=$(basename $SANE_GT_URL)
+            SANE_GT_NAME=$(basename $SANE_GT_URL .tar.gz)
+
+            wget $SANE_GT_URL -O $SANE_GT_FILE
+            
+            mkdir -p sane-temp
+            tar -xf $SANE_GT_FILE -C sane-temp
+            mkdir -p linux-firmware-staging/usr/share/sane/gt68xx/
+            cp -f sane-temp/$SANE_GT_NAME/*.usb linux-firmware-staging/usr/share/sane/gt68xx/           
+            cp -f sane-temp/$SANE_GT_NAME/*.fw linux-firmware-staging/usr/share/sane/gt68xx/           
 
       - name: Prepare SquashFS root
         run: |
