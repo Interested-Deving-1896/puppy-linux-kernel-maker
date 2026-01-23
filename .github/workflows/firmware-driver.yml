@@ -168,11 +168,11 @@ jobs:
           # Modern B43
           wget https://github.com/minios-linux/b43-firmware/releases/download/b43-firmware/broadcom-wl-6.30.163.46.tar.bz2
           tar xjf broadcom-wl-6.30.163.46.tar.bz2
-          sudo b43-fwcutter -w linux-firmware-additional/lib/firmware broadcom-wl-6.30.163.46.wl_apsta.o
+          b43-fwcutter -w linux-firmware-additional/lib/firmware broadcom-wl-6.30.163.46.wl_apsta.o
           
           # Legacy B43 (v3)
           wget http://downloads.openwrt.org/sources/wl_apsta-3.130.20.0.o
-          sudo b43-fwcutter -w linux-firmware-additional/lib/firmware wl_apsta-3.130.20.0.o
+          b43-fwcutter -w linux-firmware-additional/lib/firmware wl_apsta-3.130.20.0.o
 
       - name: Build Sigrok Firmware
         run: |
