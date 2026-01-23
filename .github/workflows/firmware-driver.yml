@@ -235,11 +235,12 @@ jobs:
           
           cp -a linux-firmware-staging squashfs-root/lib/firmware
           cp -a linux-firmware-staging squashfs-root-usrmerge/usr/lib/firmware
-          cp -ar linux-firmware-additional/usr/* squashfs-root/
-          cp -ar linux-firmware-additional/lib/firmware/* squashfs-root/lib/firmware
+          
+          cp -ar linux-firmware-additional/usr squashfs-root/
+          cp -ar linux-firmware-additional/lib/firmware/* squashfs-root/lib/firmware/
   
-          cp -ar linux-firmware-additional/usr/* squashfs-root-usrmerge/          
-          cp -ar linux-firmware-additional/lib/firmware/* squashfs-root-usrmerge/usr/lib/firmware
+          cp -ar linux-firmware-additional/usr squashfs-root-usrmerge/          
+          cp -ar linux-firmware-additional/lib/firmware/* squashfs-root-usrmerge/usr/lib/firmware/
         
           rm -rf squashfs-root/lib/firmware/.git*
           rm -f squashfs-root/lib/firmware/.editorconfig
