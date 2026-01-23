@@ -161,7 +161,7 @@ jobs:
 
             #alsa firmware
             
-            ALSAFW_URL="	https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/a/alsa-firmware-1.2.4-15.fc43.noarch.rpm"
+            ALSAFW_URL="https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/a/alsa-firmware-1.2.4-17.fc44.noarch.rpm"
             ALSAFW_FILE=$(basename $ALSAFW_URL)
             
             wget $ALSAFW_URL -O $ALSAFW_FILE
