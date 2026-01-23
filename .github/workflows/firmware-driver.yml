@@ -17,7 +17,9 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel rdfind rpm cpio bzip2 zstd
+          apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel rdfind rpm cpio bzip2 zstd \
+          build-essential cmake meson ninja-build b43-fwcutter libglib2.0-dev libtool autoconf autotools-dev \
+            libalsa-ocaml-dev libasound2-dev
 
       - name: Download latest Linux firmware
         run: |
@@ -107,6 +109,7 @@ jobs:
         run: |
 
             mkdir -p linux-firmware-additional/usr/share
+            mkdir -p linux-firmware-additional/lib/firmware
 
             #intel pro wireless
             
@@ -129,48 +132,6 @@ jobs:
             cp -af ipw2100/* linux-firmware-staging
             cp -af ipw2200/ipw2200-fw-3.1/* linux-firmware-staging
 
-            #b43
-            
-            B43_URL="https://slackware.halpanet.org/slackdce/packages/15.0/x86_64/network/b43-firmware/b43-firmware-6.30.163.46-fw-1_slackdce.txz"
-            B43_FILE=$(basename $B43_URL)
-
-            wget $B43_URL -O $B43_FILE
-            mkdir b43-temp
-            tar -xJf $B43_FILE -C b43-temp
-            cp -arf b43-temp/lib/firmware/* linux-firmware-staging
-
-            #b43-legacy
-            
-            B43L_URL="https://ftp.nluug.nl/pub/os/Linux/distr/pclinuxos/pclinuxos/apt/pclinuxos/64bit/RPMS.x86_64/b43legacy-firmware-1.0-3pclos2019.noarch.rpm"
-            B43L_FILE=$(basename $B43L_URL)
-
-            wget $B43L_URL -O $B43L_FILE
-            mkdir b43l-temp
-            rpm2cpio $B43L_FILE | cpio -idmv -D b43l-temp
-            cp -arf b43l-temp/lib/firmware/* linux-firmware-staging
-
-            #sof-firmware
-            
-            SOF_URL="https://src.fedoraproject.org/repo/pkgs/alsa-firmware/sof-firmware-1.4.2.tar.bz2/sha512/58e9ef29453d14557f26aed1a67cd3bfa5865034de5f19a9f5041be5af02cc72c2eb21393e3d997fd59dd10c244408a0d78310803379d35c892cba8981a6c59e/sof-firmware-1.4.2.tar.bz2"
-            SOF_FILE=$(basename $SOF_URL)
-            
-            wget $SOF_URL -O $SOF_FILE
-            mkdir sof-temp
-            tar -xf $SOF_FILE -C sof-temp
-            cp -arf sof-temp/usr/lib/firmware/* linux-firmware-staging
-
-            #alsa firmware
-            
-            ALSAFW_URL="https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/a/alsa-firmware-1.2.4-17.fc44.noarch.rpm"
-            ALSAFW_FILE=$(basename $ALSAFW_URL)
-            
-            wget $ALSAFW_URL -O $ALSAFW_FILE
-            mkdir alsa-temp
-            rpm2cpio $ALSAFW_FILE | cpio -idmv -D alsa-temp
-            mkdir -p linux-firmware-additional/usr/share/alsa/firmware
-            cp -arf alsa-temp/lib/firmware/* linux-firmware-staging
-            cp -arf alsa-temp/usr/share/alsa/firmware/* linux-firmware-additional/usr/share/alsa/firmware/
-
             #sane gt86xx
             
             SANE_GT_URL="https://p5n.pp.ru/~sergej/dl/2025/sane-gt68xx-firmware-1.0.tar.gz"
@@ -185,35 +146,58 @@ jobs:
             cp -f sane-temp/$SANE_GT_NAME/*.usb linux-firmware-additional/usr/share/sane/gt68xx/           
             cp -f sane-temp/$SANE_GT_NAME/*.fw linux-firmware-additional/usr/share/sane/gt68xx/
 
-            #sigrok
-            
-            SIG_URL="https://slackware.halpanet.org/slackdce/packages/15.0/x86_64/misc/sigrok-firmware-fx2lafw/sigrok-firmware-fx2lafw-0.1.7-noarch-1_slackdce.txz"
-            SIG_FILE=$(basename $SIG_URL)
+      - name: Extract B43 Firmware
+        run: |
+        
+          # Modern B43
+          wget https://github.com/minios-linux/b43-firmware/releases/download/b43-firmware/broadcom-wl-6.30.163.46.tar.bz2
+          tar xjf broadcom-wl-6.30.163.46.tar.bz2
+          sudo b43-fwcutter -w linux-firmware-additional/lib/firmware broadcom-wl-6.30.163.46.wl_apsta.o
+          
+          # Legacy B43 (v3)
+          wget http://downloads.openwrt.org/sources/wl_apsta-3.130.20.0.o
+          sudo b43-fwcutter -w linux-firmware-additional/lib/firmware wl_apsta-3.130.20.0.o
 
-            wget $SIG_URL -O $SIG_FILE
-            mkdir sig-temp
-            tar -xJf $SIG_FILE -C sig-temp
-            mkdir -p linux-firmware-additional/usr/share/sigrok-firmware
-            cp -arf sig-temp/usr/share/sigrok-firmware/* linux-firmware-additional/usr/share/sigrok-firmware/
+      - name: Build Sigrok Firmware
+        run: |
+          git clone https://github.com/sigrokproject/sigrok-firmware-free.git
+          cd sigrok-firmware-free
+          ./autogen.sh
+          ./configure
+          make
+          make install DESTDIR=../linux-firmware-additional/
 
+      - name: Build ALSA firmware
+        run: |
 
-            #intel sof firmware
-            
-            SOF_URL="https://github.com/thesofproject/sof-bin/releases/download/v2025.12.1/sof-bin-2025.12.1.tar.gz"
-            SOF_FILE=$(basename $SOF_URL)
-            SOF_NAME=$(basename $SOF_URL .tar.gz)
+          TARGET_DIR="linux-firmware-additional/lib/firmware"
+          
+          # Get the latest version from the official directory
+          ALSA_URL="https://www.alsa-project.org/files/pub/firmware/"
+          LATEST_TAR=$(curl -s $ALSA_URL | grep -o 'alsa-firmware-[0-9.]*\.tar\.bz2' | tail -n 1)
+          
+          wget "${ALSA_URL}${LATEST_TAR}"
+          tar xjf "$LATEST_TAR"
+          cd alsa-firmware-*/
+          
+          # Configure to install directly into our folder
+          ./configure --with-hotplug-dir="$TARGET_DIR"
+          make
+          make install
 
-            wget $SOF_URL -O $SOF_FILE
-            mkdir -p sof-temp
-            
-            [ ! -d linux-firmware-staging/intel ] && mkdir -p linux-firmware-staging/intel
-            
-            tar -xf $SOF_FILE -C sof-temp
-            
-            find ./sof-temp -type d -name "gcc" | xargs -i rm rf- {}
-            find ./sof-temp -type d -name "debug" | xargs -i rm rf- {}
-            
-            cp -arf sof-temp/$SOF_NAME/sof* linux-firmware-staging/intel/       
+      - name: Fetch SOF Binaries
+        run: |
+          # SOF is typically distributed as signed binaries for specific Intel platforms
+          # We'll pull the latest release artifacts
+          
+          TAG=$(curl -s https://api.github.com/repos/thesofproject/sof-bin/releases/latest | jq -r .tag_name)
+          wget https://github.com/thesofproject/sof-bin/archive/refs/tags/$TAG.tar.gz
+          tar -xzf $TAG.tar.gz
+
+          mkdir linux-firmware-additional/lib/firmware/intel
+          cp -ar sof-bin-*/sof* linux-firmware-additional/lib/firmware/intel/
+          cp -ar sof-bin-*/tplg linux-firmware-additional/lib/firmware/intel/
+          
 
       - name: Prepare SquashFS root
         run: |
