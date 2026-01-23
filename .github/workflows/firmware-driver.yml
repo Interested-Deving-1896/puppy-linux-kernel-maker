@@ -19,7 +19,7 @@ jobs:
           apt-get update
           apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel rdfind rpm cpio bzip2 zstd \
           build-essential cmake meson ninja-build b43-fwcutter libglib2.0-dev libtool autoconf autotools-dev \
-            libalsa-ocaml-dev libasound2-dev
+          libalsa-ocaml-dev libasound2-dev jq curl
 
       - name: Download latest Linux firmware
         run: |
@@ -170,7 +170,7 @@ jobs:
       - name: Build ALSA firmware
         run: |
 
-          TARGET_DIR="linux-firmware-additional/lib/firmware"
+          TARGET_DIR="$(pwd)/linux-firmware-additional/lib/firmware"
           
           # Get the latest version from the official directory
           ALSA_URL="https://www.alsa-project.org/files/pub/firmware/"
@@ -185,8 +185,12 @@ jobs:
           make
           make install
 
+          cd ..
+          rm -rf $TARGET_DIR/{ct{efx,speq}.bin,ess,korg,sb16,yamaha}
+
       - name: Fetch SOF Binaries
         run: |
+        
           # SOF is typically distributed as signed binaries for specific Intel platforms
           # We'll pull the latest release artifacts
           
