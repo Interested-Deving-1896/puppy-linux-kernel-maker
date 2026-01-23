@@ -164,7 +164,6 @@ jobs:
 
       - name: Extract B43 Firmware
         run: |
-        
           # Modern B43
           wget https://github.com/minios-linux/b43-firmware/releases/download/b43-firmware/broadcom-wl-6.30.163.46.tar.bz2
           tar xjf broadcom-wl-6.30.163.46.tar.bz2
@@ -176,33 +175,42 @@ jobs:
 
       - name: Build Sigrok Firmware
         run: |
-          git clone https://github.com/sigrokproject/sigrok-firmware-free.git
-          cd sigrok-firmware-free
+          TARGET_DIR=$(pwd)/linux-firmware-additional
+          
+          git clone https://github.com/sigrokproject/sigrok-firmware-fx2lafw sigrok-firmware-fx2lafw
+          cd sigrok-firmware-fx2lafw
+          
           ./autogen.sh
-          ./configure
+          ./configure --prefix=/usr
           make
-          make install DESTDIR=../linux-firmware-additional/
+          make install DESTDIR=$TARGET_DIR
 
       - name: Build ALSA firmware
         run: |
 
-          TARGET_DIR="$(pwd)/linux-firmware-additional/lib/firmware"
+          TARGET_DIR="$(pwd)/linux-firmware-additional"
           
           # Get the latest version from the official directory
-          ALSA_URL="https://www.alsa-project.org/files/pub/firmware/"
-          LATEST_TAR=$(curl -s $ALSA_URL | grep -o 'alsa-firmware-[0-9.]*\.tar\.bz2' | tail -n 1)
+          ALSA_URL="https://www.alsa-project.org/files/pub/firmware/alsa-firmware-1.2.4.tar.bz2"
+          ALSA_FILE=$(basename $ALSA_URL)
+          ALSA_NAME=$(basename $ALSA_URL .tar.bz2)
           
-          wget "${ALSA_URL}${LATEST_TAR}"
-          tar xjf "$LATEST_TAR"
-          cd alsa-firmware-*/
+          wget "$ALSA_URL" -O $ALSA_FILE
+          mkdir -p alsa-temp
+          tar xjf "$ALSA_FILE" -C alsa-temp
+          cd alsa-temp/$ALSA_NAME
           
           # Configure to install directly into our folder
-          ./configure --with-hotplug-dir="$TARGET_DIR"
+          ./configure --with-hotplug-dir="$TARGET_DIR" --enable-buildfw --prefix=/usr 
           make
-          make install
+          make install DESTDIR=$TARGET_DIR
 
-          cd ..
-          rm -rf $TARGET_DIR/{ct{efx,speq}.bin,ess,korg,sb16,yamaha}
+          rm -rf $TARGET_DIR/usr/lib/firmware/{ct{efx,speq}.bin,ess,korg,sb16,yamaha}          
+ 
+          [ ! -d $TARGET_DIR/lib/firmware ] && mkdir -p $TARGET_DIR/lib/firmware
+          
+          mv $TARGET_DIR/usr/lib/firmware/* $TARGET_DIR/lib/firmware/
+          rm -rf $TARGET_DIR/usr/lib
 
       - name: Fetch SOF Binaries
         run: |
@@ -227,8 +235,11 @@ jobs:
           
           cp -a linux-firmware-staging squashfs-root/lib/firmware
           cp -a linux-firmware-staging squashfs-root-usrmerge/usr/lib/firmware
-          cp -ar linux-firmware-additional/* squashfs-root/
-          cp -ar linux-firmware-additional/* squashfs-root-usrmerge/          
+          cp -ar linux-firmware-additional/usr/* squashfs-root/
+          cp -ar linux-firmware-additional/lib/firmware/* squashfs-root/lib/firmware
+  
+          cp -ar linux-firmware-additional/usr/* squashfs-root-usrmerge/          
+          cp -ar linux-firmware-additional/lib/firmware/* squashfs-root-usrmerge/usr/lib/firmware
         
           rm -rf squashfs-root/lib/firmware/.git*
           rm -f squashfs-root/lib/firmware/.editorconfig
