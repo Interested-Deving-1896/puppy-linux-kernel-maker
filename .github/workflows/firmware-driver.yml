@@ -19,7 +19,7 @@ jobs:
           apt-get update
           apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel rdfind rpm cpio bzip2 zstd \
           build-essential cmake meson ninja-build libglib2.0-dev libtool autoconf autotools-dev \
-          libalsa-ocaml-dev libasound2-dev jq curl
+          libalsa-ocaml-dev libasound2-dev jq curl sdcc
 
       - name: Download latest Linux firmware
         run: |
