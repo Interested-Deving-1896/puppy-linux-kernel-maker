@@ -18,7 +18,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y wget git squashfs-tools xz-utils ca-certificates python3 parallel rdfind rpm cpio bzip2 zstd \
-          build-essential cmake meson ninja-build b43-fwcutter libglib2.0-dev libtool autoconf autotools-dev \
+          build-essential cmake meson ninja-build libglib2.0-dev libtool autoconf autotools-dev \
           libalsa-ocaml-dev libasound2-dev jq curl
 
       - name: Download latest Linux firmware
@@ -145,6 +145,22 @@ jobs:
             mkdir -p linux-firmware-additional/usr/share/sane/gt68xx
             cp -f sane-temp/$SANE_GT_NAME/*.usb linux-firmware-additional/usr/share/sane/gt68xx/           
             cp -f sane-temp/$SANE_GT_NAME/*.fw linux-firmware-additional/usr/share/sane/gt68xx/
+
+      - name: Compile and Install b43-fwcutter
+        run: |
+          # Clone the official tools mirror
+          git clone --depth 1 https://github.com/mbuesch/b43-tools.git
+          cd b43-tools/fwcutter
+          
+          # Compile
+          make
+          
+          # Install to /usr/local/bin (requires sudo)
+          make install
+          
+          # Verify it's in the system PATH
+          which b43-fwcutter
+          b43-fwcutter -v
 
       - name: Extract B43 Firmware
         run: |
