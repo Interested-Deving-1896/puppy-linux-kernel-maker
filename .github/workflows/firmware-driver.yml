@@ -209,6 +209,10 @@ jobs:
             [ ! -d linux-firmware-staging/intel ] && mkdir -p linux-firmware-staging/intel
             
             tar -xf $SOF_FILE -C sof-temp
+            
+            find ./sof-temp -type d -name "gcc" | xargs -i rm rf- {}
+            find ./sof-temp -type d -name "debug" | xargs -i rm rf- {}
+            
             cp -arf sof-temp/$SOF_NAME/sof* linux-firmware-staging/intel/       
 
       - name: Prepare SquashFS root
