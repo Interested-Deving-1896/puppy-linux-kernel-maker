@@ -196,6 +196,21 @@ jobs:
             mkdir -p linux-firmware-additional/usr/share/sigrok-firmware
             cp -arf sig-temp/usr/share/sigrok-firmware/* linux-firmware-additional/usr/share/sigrok-firmware/
 
+
+            #intel sof firmware
+            
+            SOF_URL="https://github.com/thesofproject/sof-bin/releases/download/v2025.12.1/sof-bin-2025.12.1.tar.gz"
+            SOF_FILE=$(basename $SOF_URL)
+            SOF_NAME=$(basename $SOF_URL .tar.gz)
+
+            wget $SOF_URL -O $SOF_FILE
+            mkdir -p sof-temp
+            
+            [ ! -d linux-firmware-staging/intel ] && mkdir -p linux-firmware-staging/intel
+            
+            tar -xf $SOF_FILE -C sof-temp
+            cp -arf sof-temp/$SOF_NAME/sof* linux-firmware-staging/intel/       
+
       - name: Prepare SquashFS root
         run: |
           
