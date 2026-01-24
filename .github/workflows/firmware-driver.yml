@@ -205,7 +205,8 @@ jobs:
           make
           make install DESTDIR=$TARGET_DIR
 
-          rm -rf $TARGET_DIR/lib/firmware/{ct{efx,speq}.bin,ess,korg,sb16,yamaha}          
+          rm -rf $TARGET_DIR/lib/firmware/{ct{efx,speq}.bin,ess,korg,sb16,yamaha}
+          rm -rf $TARGET_DIR/lib/firmware/turtlebeach       
  
       - name: Fetch Intel SOF Binaries
         run: |
