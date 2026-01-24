@@ -201,17 +201,12 @@ jobs:
           cd alsa-temp/$ALSA_NAME
           
           # Configure to install directly into our folder
-          ./configure --with-hotplug-dir="$TARGET_DIR" --enable-buildfw --prefix=/usr 
+          ./configure --with-hotplug-dir="$TARGET_DIR" --enable-buildfw
           make
           make install DESTDIR=$TARGET_DIR
 
-          rm -rf $TARGET_DIR/usr/lib/firmware/{ct{efx,speq}.bin,ess,korg,sb16,yamaha}          
+          rm -rf $TARGET_DIR/lib/firmware/{ct{efx,speq}.bin,ess,korg,sb16,yamaha}          
  
-          [ ! -d $TARGET_DIR/lib/firmware ] && mkdir -p $TARGET_DIR/lib/firmware
-          
-          mv $TARGET_DIR/usr/lib/firmware/* $TARGET_DIR/lib/firmware/
-          rm -rf $TARGET_DIR/usr/lib
-
       - name: Fetch SOF Binaries
         run: |
         
