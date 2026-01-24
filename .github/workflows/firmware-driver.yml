@@ -224,6 +224,7 @@ jobs:
           tar -xzf $SOF_FILE -C sof-temp
           
           [ ! -d linux-firmware-staging/intel ] && mkdir -p linux-firmware-staging/intel
+          
           cp -ar sof-temp/$SOF_NAME/sof* linux-firmware-staging/intel/
 
       - name: Prepare SquashFS root
