@@ -105,7 +105,7 @@ jobs:
 
           EOF
 
-      - name: Fetching third-party firmware drivers
+      - name: Fetching Intel Pro Wireless and GT68xx firmware drivers
         run: |
 
             mkdir -p linux-firmware-additional/usr/share
