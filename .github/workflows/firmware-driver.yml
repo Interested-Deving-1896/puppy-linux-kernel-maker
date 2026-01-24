@@ -212,15 +212,18 @@ jobs:
         
           # SOF is typically distributed as signed binaries for specific Intel platforms
           # We'll pull the latest release artifacts
-          
-          TAG=$(curl -s https://api.github.com/repos/thesofproject/sof-bin/releases/latest | jq -r .tag_name)
-          wget https://github.com/thesofproject/sof-bin/archive/refs/tags/$TAG.tar.gz
-          tar -xzf $TAG.tar.gz
 
-          mkdir linux-firmware-additional/lib/firmware/intel
-          cp -ar sof-bin-*/sof* linux-firmware-additional/lib/firmware/intel/
-          cp -ar sof-bin-*/tplg linux-firmware-additional/lib/firmware/intel/
+          SOF_URL="https://github.com/thesofproject/sof-bin/releases/download/v2025.12.1/sof-bin-2025.12.1.tar.gz"
+          SOF_FILE="$(basename $SOF_URL)"
+          SOF_NAME=$(basename $SOF_FILE .tar.gz)
+        
+          wget $SOF_URL -O $SOF_FILE
           
+          mkdir -p sof-temp
+          tar -xzf $SOF_FILE -C sof-temp
+          
+          [ ! -d linux-firmware-staging/intel ] && mkdir -p linux-firmware-staging/intel
+          cp -ar sof-temp/$SOF_NAME/sof* linux-firmware-staging/intel/
 
       - name: Prepare SquashFS root
         run: |
