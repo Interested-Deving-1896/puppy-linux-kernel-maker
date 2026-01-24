@@ -201,13 +201,13 @@ jobs:
           cd alsa-temp/$ALSA_NAME
           
           # Configure to install directly into our folder
-          ./configure --with-hotplug-dir="/lib/firmware" --enable-buildfw
+          ./configure --with-hotplug-dir="/lib/firmware" --enable-buildfw --prefix=/usr
           make
           make install DESTDIR=$TARGET_DIR
 
           rm -rf $TARGET_DIR/lib/firmware/{ct{efx,speq}.bin,ess,korg,sb16,yamaha}          
  
-      - name: Fetch SOF Binaries
+      - name: Fetch Intel SOF Binaries
         run: |
         
           # SOF is typically distributed as signed binaries for specific Intel platforms
