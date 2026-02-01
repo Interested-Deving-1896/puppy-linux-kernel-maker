@@ -96,14 +96,14 @@ jobs:
         working-directory: linux
         run: |
               make olddefconfig
-              cp -f .config kernel-${KMOD_VERSION}.config
+              cp -f .config kernel-${KMOD_VERSION}-aufs.config
 
       - name: Upload kernel config
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-${{ env.KMOD_VERSION }}-config
+          name: kernel-${{ env.KMOD_VERSION }}-aufs-config
           path: |
-                linux/kernel-${{ env.KMOD_VERSION }}.config              
+                linux/kernel-${{ env.KMOD_VERSION }}-aufs.config              
           
       - name: Build kernel image
         working-directory: linux
@@ -149,38 +149,38 @@ jobs:
 
       - name: Create Kernel Modules SquashFS
         run: |
-          mksquashfs squashfs-root huge-kernel-${KMOD_VERSION}.sfs \
+          mksquashfs squashfs-root huge-kernel-${KMOD_VERSION}-aufs.sfs \
             -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
-          mksquashfs squashfs-root-usrmerge huge-kernel-${KMOD_VERSION}-usrmerge.sfs \
+          mksquashfs squashfs-root-usrmerge huge-kernel-${KMOD_VERSION}-aufs-usrmerge.sfs \
             -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
 
       - name: Create Kernel Headers SquashFS
         run: |
           mksquashfs kernel-headers-squashfs \
-            kernel-headers-${KMOD_VERSION}.sfs \
+            kernel-headers-${KMOD_VERSION}-aufs.sfs \
             -comp xz -Xdict-size 100% -b 1M -noappend -Xbcj x86
 
       - name: Package kernel + squashfs
         run: |
-          tar -cJf huge-kernel-${KMOD_VERSION}.tar.xz \
-            vmlinuz huge-kernel-${KMOD_VERSION}.sfs
-          tar -cJf huge-kernel-${KMOD_VERSION}-usrmerge.tar.xz \
-            vmlinuz huge-kernel-${KMOD_VERSION}-usrmerge.sfs
+          tar -cJf huge-kernel-${KMOD_VERSION}-aufs.tar.xz \
+            vmlinuz huge-kernel-${KMOD_VERSION}-aufs.sfs
+          tar -cJf huge-kernel-${KMOD_VERSION}-aufs-usrmerge.tar.xz \
+            vmlinuz huge-kernel-${KMOD_VERSION}-aufs-usrmerge.sfs
             
       - name: Upload kernel package (traditional)
         uses: actions/upload-artifact@v4
         with:
-          name: huge-kernel-${{ env.KMOD_VERSION }}
-          path: huge-kernel-${{ env.KMOD_VERSION }}.tar.xz        
+          name: huge-kernel-${{ env.KMOD_VERSION }}-aufs
+          path: huge-kernel-${{ env.KMOD_VERSION }}-aufs.tar.xz        
 
       - name: Upload kernel package (usrmerge)
         uses: actions/upload-artifact@v4
         with:
-          name: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge
-          path: huge-kernel-${{ env.KMOD_VERSION }}-usrmerge.tar.xz  
+          name: huge-kernel-${{ env.KMOD_VERSION }}-aufs-usrmerge
+          path: huge-kernel-${{ env.KMOD_VERSION }}-aufs-usrmerge.tar.xz  
 
       - name: Upload kernel headers
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-headers-${{ env.KMOD_VERSION }}
-          path: kernel-headers-${{ env.KMOD_VERSION }}.sfs  
+          name: kernel-headers-${{ env.KMOD_VERSION }}-aufs
+          path: kernel-headers-${{ env.KMOD_VERSION }}-aufs.sfs  
