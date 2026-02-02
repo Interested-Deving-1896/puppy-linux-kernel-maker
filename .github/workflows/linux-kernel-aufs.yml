@@ -1,8 +1,8 @@
 name: Puppy Linux Kernel Build + AUFS
 
 on:
-  schedule:
-    - cron: '0 2 */20 * *' # daily at 02:00 UTC
+  # schedule:
+  # - cron: '0 2 */20 * *' # daily at 02:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
       image: debian:sid
 
     env:
-      BASE_VERSION: "6.18"
+      BASE_VERSION: "6.12"
       CUSTOM_VERSION: "opkm"
       AUFS_REPO: "https://github.com/sfjro/aufs-standalone.git"
       AUFS_BRANCH: "aufs6.18"  # Replace with desired AUFS branch
