@@ -16,7 +16,7 @@ jobs:
       BASE_VERSION: "6.12"
       CUSTOM_VERSION: "opkm"
       AUFS_REPO: "https://github.com/sfjro/aufs-standalone.git"
-      AUFS_BRANCH: "aufs6.18"  # Replace with desired AUFS branch
+      AUFS_BRANCH: "aufs6.12"  # Replace with desired AUFS branch
       AUFS_PATCH_FILES: "aufs6-kbuild.patch aufs6-base.patch aufs6-mmap.patch aufs6-standalone.patch"
 
     steps:
