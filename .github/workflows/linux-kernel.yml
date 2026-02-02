@@ -13,7 +13,7 @@ jobs:
       image: debian:sid
 
     env:
-      BASE_VERSION: "6.18"
+      BASE_VERSION: "6.12"
       CUSTOM_VERSION: "opkm"
 
     steps:
