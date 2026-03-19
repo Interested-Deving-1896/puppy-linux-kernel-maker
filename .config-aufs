@@ -1179,7 +1179,7 @@ CONFIG_PT_RECLAIM=y
 #
 # Data Access Monitoring
 #
-# CONFIG_DAMON is not set
+CONFIG_DAMON=y
 # end of Data Access Monitoring
 # end of Memory Management options
 
@@ -10770,3 +10770,8 @@ CONFIG_ARCH_USE_MEMTEST=y
 # end of Kernel hacking
 
 CONFIG_IO_URING_ZCRX=y
+CONFIG_MG_LRU=y
+CONFIG_TCP_CONG_BBR=y
+CONFIG_DEFAULT_TCP_CONG="bbr"
+CONFIG_SHADOW_CALL_STACK=y
+CONFIG_RCU_LAZY=y
