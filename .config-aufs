@@ -1048,7 +1048,7 @@ CONFIG_COREDUMP=y
 # Memory Management options
 #
 CONFIG_SWAP=y
-# CONFIG_ZSWAP is not set
+CONFIG_ZSWAP=y
 CONFIG_ZSMALLOC=y
 
 #
