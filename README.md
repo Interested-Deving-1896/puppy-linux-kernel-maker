@@ -1,21 +1,75 @@
-This is a just a simple online tool for creating custom kernel for Puppy Linux including firmware drivers
+[update-readmes]   Mode: rewrite — migrating to template structure...
+# puppy-linux-kernel-maker
 
-How to use this:
-* Fork this repo
-* Edit .config files
-* Go to Actions
-* On action sidebar, select workflow and click Run Workflow.
-* Select repo branch and click click Run Workflow
-* Wait until the process is finished
-* Click All Workflows to see the build progress
-* Once complete, On "All workflows" select the finished workflow.
-* Go to artifacts section to download the output build
+[![Built with Ona](https://ona.com/build-with-ona.svg)](https://app.ona.com/#https://github.com/Interested-Deving-1896/puppy-linux-kernel-maker)
 
-There are three workflow files:
-* firmware-driver.yml - for creating linux firmware driver
-* linux-kernel.yml - for creating linux kernel without any patches
-* linux-kernel-aufs.yml - for creating linux kernel with AUFS patch
+<!-- AI:start:what-it-does -->
+_Description pending._
+<!-- AI:end:what-it-does -->
 
-Tips: If there is a new linux kernel version. Or want to compile other kernel version. Just create new branch and edit the environment section of workflow files. Then run workflow on the newly created branch
+## Architecture
 
-NOTE: This tool follows github workflow rules. For github free version, there are 33 hours of runtime hours per month
+<!-- AI:start:architecture -->
+_Architecture documentation pending._
+<!-- AI:end:architecture -->
+
+## Install
+
+<!-- Add installation instructions here. This section is yours — the AI will not modify it. -->
+
+```bash
+git clone https://github.com/Interested-Deving-1896/puppy-linux-kernel-maker.git
+cd puppy-linux-kernel-maker
+```
+
+## Usage
+
+<!-- Add usage examples here. This section is yours — the AI will not modify it. -->
+
+## Configuration
+
+<!-- Document configuration options here. This section is yours — the AI will not modify it. -->
+
+## CI
+
+<!-- AI:start:ci -->
+_CI documentation pending._
+<!-- AI:end:ci -->
+
+## Mirror chain
+
+<!-- AI:start:mirror-chain -->
+This repo is maintained in [`Interested-Deving-1896/puppy-linux-kernel-maker`](https://github.com/Interested-Deving-1896/puppy-linux-kernel-maker) and mirrored through:
+
+```
+Interested-Deving-1896/puppy-linux-kernel-maker  ──►  OpenOS-Project-OSP/puppy-linux-kernel-maker  ──►  OpenOS-Project-Ecosystem-OOC/puppy-linux-kernel-maker
+```
+
+Changes flow downstream automatically via the hourly mirror chain in
+[`fork-sync-all`](https://github.com/Interested-Deving-1896/fork-sync-all).
+Direct commits to OSP or OOC are detected and opened as PRs back to `Interested-Deving-1896`.
+<!-- AI:end:mirror-chain -->
+
+## Contributors
+
+<!-- AI:start:contributors -->
+_Contributors pending._
+<!-- AI:end:contributors -->
+
+## Origins
+
+<!-- AI:start:origins -->
+_Original project — no upstream fork._
+<!-- AI:end:origins -->
+
+## Resources
+
+<!-- AI:start:resources -->
+_No additional resource files found._
+<!-- AI:end:resources -->
+
+## License
+
+<!-- AI:start:license -->
+[GPL-2.0](https://github.com/Interested-Deving-1896/puppy-linux-kernel-maker/blob/6.18/LICENSE) © 2026 [Interested-Deving-1896](https://github.com/Interested-Deving-1896)
+<!-- AI:end:license -->
